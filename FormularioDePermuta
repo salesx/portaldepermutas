@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -53,36 +54,18 @@
             <button onclick="closeCustomAlert()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">OK</button>
         </div>
     </div>
-    <div class="printable-form bg-white rounded-3xl shadow-2xl p-6 md:p-10 max-w-4xl mx-auto border-4 border-gray-800">
+    <div class="printable-form bg-white rounded-3xl shadow-3d p-6 md:p-10 max-w-4xl mx-auto border-4 border-gray-800">
         
-        <!-- Cabeçalho tipo folha timbrada -->
+        <!-- Cabeçalho tipo folha timbrada - Brasão removido da visualização no-print -->
         <div class="flex flex-col items-center justify-center text-center p-4 bg-gray-800 text-white rounded-t-2xl no-print">
-            <img id="header-brasao" src="https://placehold.co/100x120/0f172a/9ca3af?text=BRAS%C3%83O" alt="Brasão do Estado" class="w-24 h-24 mb-2">
             <h1 class="text-xl font-bold tracking-wide">ESTADO DO MARANHÃO</h1>
             <p class="text-sm font-light">SECRETARIA DE SEGURANÇA PÚBLICA</p>
             <p class="text-sm font-light">COMANDO DE POLICIAMENTO DE ÁREA DO INTERIOR-5 (CPA/I-5)</p>
             <p class="text-xs mt-1 font-extralight">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO - 2ª CIA</p>
         </div>
-
+        
         <h2 class="text-2xl font-extrabold text-center text-gray-800 my-8">FORMULÁRIO DE PERMUTA DE SERVIÇO</h2>
         
-        <!-- Campo para upload do brasão - agora integrado e com estilo aprimorado -->
-        <div class="mb-6 flex flex-col items-center no-print border-b-2 border-dashed pb-6">
-            <h4 class="text-base font-semibold text-gray-800 mb-4 text-center">ENVIE O BRASÃO ABAIXO</h4>
-            <p class="text-sm text-gray-600 mb-2 text-center">
-                Caso não possua, baixe no botão abaixo e em seguida faça o upload do brasão da PM.
-            </p>
-            <div class="flex flex-col items-center md:flex-row gap-4 mb-4">
-                <a href="https://drive.google.com/uc?export=download&id=1uPhdu-uNmAt_FWfKpa72KrbRn6BbiC-w" download="brasao.png" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 no-print">
-                    Baixar Brasão
-                </a>
-                <span class="text-gray-500">→</span>
-                <input type="file" id="brasaoUpload" accept="image/*" class="p-2 border border-gray-300 rounded-lg text-sm text-gray-500 focus:outline-none focus:border-blue-500 transition-colors duration-200">
-                <img id="brasaoPreview" class="w-16 h-16 rounded-full hidden" src="#" alt="Pré-visualização do Brasão">
-            </div>
-            <p id="brasaoWarning" class="text-sm text-red-600 mt-2 hidden text-center font-semibold">O upload do brasão é obrigatório para imprimir ou enviar.</p>
-        </div>
-
         <!-- Campos para a localização -->
         <div class="mb-6">
             <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">Localização:</h5>
@@ -194,7 +177,13 @@
     </div>
 
     <script>
-        let uploadedBrasao = 'https://placehold.co/100x120/0f172a/9ca3af?text=BRAS%C3%83O'; // Fallback placeholder
+        const brasaoUrl = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
+        
+        // Atribui a URL do brasão para a imagem no cabeçalho e para a impressão
+        const headerBrasaoElement = document.getElementById('header-brasao');
+        if (headerBrasaoElement) {
+            headerBrasaoElement.src = brasaoUrl;
+        }
 
         function showCustomAlert(title, message) {
             document.getElementById('alert-title').textContent = title;
@@ -205,23 +194,6 @@
         window.closeCustomAlert = function() {
             document.getElementById('custom-alert').classList.add('hidden');
         };
-
-        document.getElementById('brasaoUpload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('brasaoPreview');
-                    const headerBrasao = document.getElementById('header-brasao');
-                    preview.src = e.target.result;
-                    headerBrasao.src = e.target.result;
-                    preview.classList.remove('hidden');
-                    uploadedBrasao = e.target.result;
-                    validateBrasao();
-                };
-                reader.readAsDataURL(file);
-            }
-        });
 
         const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox');
         const pagamentoServicoInicio = document.getElementById('dataPagamentoServicoInicio');
@@ -329,14 +301,8 @@
         }
 
         function validateBrasao() {
-            const brasaoWarning = document.getElementById('brasaoWarning');
-            if (uploadedBrasao.includes('placehold.co')) {
-                brasaoWarning.classList.remove('hidden');
-                return false;
-            } else {
-                brasaoWarning.classList.add('hidden');
-                return true;
-            }
+            // Não há mais upload, então sempre retorna true
+            return true;
         }
 
         function validateField(fieldId, warningId) {
@@ -558,6 +524,8 @@
             if (!noPagamentoCheckbox) {
                 pagamentoHtml = `<p class="text-base mt-2">Data do pagamento do serviço: ${pagamentoServicoTexto}</p>`;
             }
+            
+            const brasaoUrlPrint = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
 
             const printContent = `
                 <!DOCTYPE html>
@@ -590,29 +558,34 @@
                 </head>
                 <body>
                     <div class="container">
-                        <div class="text-center" style="line-height: 1.15; margin-bottom: 1rem;">
-                            <img src="${uploadedBrasao}" alt="Brasão" style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
-                            <p class="font-bold">ESTADO DO MARANHAO</p>
-                            <p class="text-sm">SECRETARIA DE SEGURANÇA DE SEGURANÇA</p>
-                            <p class="text-sm">CPA/I-5 – 10º BPM</p>
-                            <p class="text-sm">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO 2ª</p>
-                            <p class="text-sm">COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
-                            <p class="text-xs" style="margin-top: 0.25rem;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
-                            <p style="margin-top: 1rem;" class="font-bold">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
-                        </div>
+    <div class="text-center" style="line-height: 1.15; margin: 0;">
+        <img src="${brasaoUrlPrint}" alt="Brasão" 
+             style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
+
+        <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
+        <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA DE SEGURANÇA</p>
+        <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
+        <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+        <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+        <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+
+        <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+    </div>
+</div>
+
         
                         <div class="mt-4 mb-4">
                             <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
                         </div>
         
-                        <div style="margin-bottom: 2rem;">
+                        <div style="margin-bottom: 0,25rem;">
                             <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}</p>
-                            <p style="margin-top: 3rem;">Assinatura:________________________________________</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
                         </div>
         
-                        <div style="margin-bottom: 2rem;">
+                        <div style="margin-bottom: 0,25rem;">
                             <p class="text-base">PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}</p>
-                            <p style="margin-top: 3rem;">Assinatura:_______________________________________</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
                         </div>
                         
                         <div class="mb-2">
@@ -624,12 +597,15 @@
                             <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
                         </div>
 
-                        <div class="mt-4 text-center">
-                            <p class="text-base">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: () Sim() Não</p>
-                            <p class="text-base text-center" style="margin-top: 2rem;">_____________________________________________________</p>
-                            <p class="text-base mt-4">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN. QOPM</p>
-                            <p class="text-sm">COMANDANTE DA 2°CP/10°BPM</p>
-                        </div>
+                        <div class="text-center" style="margin-top: 2rem;">
+    <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: (  ) Sim  (  ) Não</p>
+
+<p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
+<p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
+
+    <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
+</div>
+
                     </div>
                 </body>
                 </html>
