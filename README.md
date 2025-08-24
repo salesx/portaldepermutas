@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -26,74 +27,35 @@
                 margin: 0 !important;
                 max-width: none !important;
             }
-            input[type="text"], input[type="date"], input[type="tel"] {
+            input[type="text"], input[type="date"] {
                 border: none !important;
                 border-bottom: 1px solid #000 !important;
                 padding: 0 !important;
-            }
-            /* Esconde as caixas de seleção na impressão */
-            .printable-form input[type="checkbox"] {
-                display: none;
             }
         }
         .input-error {
             border-color: #ef4444;
         }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .modal {
-            transition: opacity 0.3s ease-in-out;
+        #custom-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.75);
         }
     </style>
 </head>
 <body class="p-6 md:p-12">
-    <!-- Modal de Alerta Customizado -->
-    <div id="custom-modal" class="modal hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-[9999] opacity-0">
-        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center transform scale-95 transition-transform">
-            <h3 class="text-xl font-bold mb-4" id="modal-title"></h3>
-            <p class="text-gray-700 mb-6" id="modal-message"></p>
-            <div id="modal-actions" class="flex justify-center gap-4">
-                <button onclick="closeCustomModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors">OK</button>
-            </div>
+    <div id="custom-alert" class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-[9999]">
+        <div class="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full text-center">
+            <h3 class="text-xl font-bold mb-4" id="alert-title"></h3>
+            <p class="text-gray-700 mb-6" id="alert-message"></p>
+            <button onclick="closeCustomAlert()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">OK</button>
         </div>
     </div>
-
-    <!-- Modal para Gerenciar PMs -->
-    <div id="manage-pm-modal" class="modal hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-[9999] opacity-0">
-        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-lg w-full transform scale-95 transition-transform">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-2xl font-bold">Gerenciar Policiais Militares</h3>
-                <button onclick="closeManagePmModal()" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
-            </div>
-            <div id="pm-list-container" class="max-h-80 overflow-y-auto mb-4 border rounded-md p-2">
-                <!-- Lista de PMs será injetada aqui -->
-            </div>
-            <h4 class="text-lg font-bold mt-4 mb-2">Adicionar Novo PM</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="newPmName" class="text-sm font-medium text-gray-600 block">Nome:</label>
-                    <input type="text" id="newPmName" placeholder="Ex: SD PM 001/22 FULANO" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
-                </div>
-                <div>
-                    <label for="newPmId" class="text-sm font-medium text-gray-600 block">ID (opcional):</label>
-                    <input type="tel" id="newPmId" placeholder="Ex: 012345" pattern="\d*" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
-                </div>
-            </div>
-            <button onclick="addPm()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md mt-4 transition-colors">Adicionar PM</button>
-        </div>
-    </div>
-
-    <div class="printable-form bg-white rounded-3xl shadow-xl p-6 md:p-10 max-w-4xl mx-auto border-4 border-gray-800">
+    <div class="printable-form bg-white rounded-3xl shadow-3d p-6 md:p-10 max-w-4xl mx-auto border-4 border-gray-800">
+        
         <!-- Cabeçalho tipo folha timbrada - Brasão removido da visualização no-print -->
         <div class="flex flex-col items-center justify-center text-center p-4 bg-gray-800 text-white rounded-t-2xl no-print">
             <h1 class="text-xl font-bold tracking-wide">ESTADO DO MARANHÃO</h1>
@@ -158,7 +120,7 @@
             </div>
         </div>
 
-        <!-- Datalist para a lista de PMs (será preenchida dinamicamente) -->
+        <!-- Datalist para a lista de PMs -->
         <datalist id="pmList"></datalist>
 
         <!-- Campos para as datas e tipo de serviço -->
@@ -208,185 +170,29 @@
             <button onclick="printForm()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
                 Concluir Permuta
             </button>
-            <button onclick="showManagePmModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
-                Gerenciar PMs
+            <button onclick="signWithGovBr()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                Ir para o GOV.BR
             </button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db;
-        let auth;
-        let userId;
-
-        // Function to show a custom modal
-        function showCustomModal(title, message, actions = '<button onclick="closeCustomModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors">OK</button>') {
-            const modal = document.getElementById('custom-modal');
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-message').textContent = message;
-            document.getElementById('modal-actions').innerHTML = actions;
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.querySelector('.transform').classList.remove('scale-95');
-            }, 10);
-        }
-
-        // Function to close the custom modal
-        window.closeCustomModal = function() {
-            const modal = document.getElementById('custom-modal');
-            modal.classList.add('opacity-0');
-            modal.querySelector('.transform').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300); // Wait for the transition to finish
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
+    <script>
+        const brasaoUrl = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
         
-        let pmList = [];
-
-        // Auth state listener
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                await fetchPmList();
-            } else {
-                // If the initial token is not present, sign in anonymously
-                try {
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) {
-                    showCustomModal('Erro de Autenticação', `Falha ao autenticar com o Firebase: ${error.message}`);
-                    console.error("Authentication error:", error);
-                }
-            }
-        });
-
-        // Fetch PM list from Firestore
-        async function fetchPmList() {
-            try {
-                const pmCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/pm_data`);
-                onSnapshot(pmCollectionRef, (snapshot) => {
-                    pmList = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        name: doc.data().name,
-                        pmId: doc.data().pmId
-                    }));
-                    updateDatalist();
-                    renderManagePmList();
-                }, (error) => {
-                    console.error("Error fetching PM list:", error);
-                    showCustomModal('Erro de Dados', 'Falha ao carregar a lista de PMs.');
-                });
-            } catch (error) {
-                showCustomModal('Erro de Dados', `Falha ao conectar com o banco de dados: ${error.message}`);
-                console.error("Firestore connection error:", error);
-            }
+        // Atribui a URL do brasão para a imagem no cabeçalho e para a impressão
+        const headerBrasaoElement = document.getElementById('header-brasao');
+        if (headerBrasaoElement) {
+            headerBrasaoElement.src = brasaoUrl;
         }
 
-        // Update the datalist for form inputs
-        function updateDatalist() {
-            const pmDatalist = document.getElementById('pmList');
-            pmDatalist.innerHTML = '';
-            const turiacuCheckbox = document.querySelector('input[name="localizacao"][value="DPM TURIAÇU"]');
-            if (turiacuCheckbox.checked) {
-                pmList.forEach(pm => {
-                    const option = document.createElement('option');
-                    option.value = pm.name;
-                    pmDatalist.appendChild(option);
-                });
-            }
+        function showCustomAlert(title, message) {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('custom-alert').classList.remove('hidden');
         }
 
-        // Render the list of PMs in the management modal
-        function renderManagePmList() {
-            const listContainer = document.getElementById('pm-list-container');
-            listContainer.innerHTML = '';
-            if (pmList.length === 0) {
-                listContainer.innerHTML = '<p class="text-center text-gray-500">Nenhum PM cadastrado.</p>';
-                return;
-            }
-            pmList.forEach(pm => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between p-2 my-1 bg-gray-100 rounded-lg';
-                item.innerHTML = `
-                    <p class="text-sm"><strong>${pm.name}</strong> - ${pm.pmId || 'N/A'}</p>
-                    <button onclick="deletePm('${pm.id}')" class="text-red-500 hover:text-red-700 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                `;
-                listContainer.appendChild(item);
-            });
-        }
-
-        // Add a new PM to Firestore
-        window.addPm = async function() {
-            const newName = document.getElementById('newPmName').value.trim();
-            const newId = document.getElementById('newPmId').value.trim();
-            if (!newName) {
-                showCustomModal('Erro', 'O nome do PM é obrigatório.');
-                return;
-            }
-            try {
-                const pmCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/pm_data`);
-                await addDoc(pmCollectionRef, { name: newName, pmId: newId });
-                document.getElementById('newPmName').value = '';
-                document.getElementById('newPmId').value = '';
-                showCustomModal('Sucesso', 'PM adicionado com sucesso!');
-            } catch (e) {
-                showCustomModal('Erro', `Falha ao adicionar PM: ${e.message}`);
-                console.error("Error adding document: ", e);
-            }
-        }
-
-        // Delete a PM from Firestore
-        window.deletePm = async function(docId) {
-            try {
-                const pmDocRef = doc(db, `artifacts/${appId}/users/${userId}/pm_data`, docId);
-                await deleteDoc(pmDocRef);
-                showCustomModal('Sucesso', 'PM excluído com sucesso!');
-            } catch (e) {
-                showCustomModal('Erro', `Falha ao excluir PM: ${e.message}`);
-                console.error("Error deleting document: ", e);
-            }
-        }
-
-        // Show/hide the management modal
-        window.showManagePmModal = function() {
-            const modal = document.getElementById('manage-pm-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.querySelector('.transform').classList.remove('scale-95');
-            }, 10);
-            renderManagePmList();
-        }
-
-        window.closeManagePmModal = function() {
-            const modal = document.getElementById('manage-pm-modal');
-            modal.classList.add('opacity-0');
-            modal.querySelector('.transform').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+        window.closeCustomAlert = function() {
+            document.getElementById('custom-alert').classList.add('hidden');
         };
 
         const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox');
@@ -427,33 +233,60 @@
                         }
                     });
                 }
-                updateDatalist();
+                updatePmList();
                 validateLocalizacao();
             });
         });
 
+        const pmData = {
+            "Cb Pm 626/14 Coriolano": null,
+            "Sd Pm 473/16 André": "849351",
+            "Sd Pm 408/18 Ribeiro": null,
+            "Sd Pm 424/18 Rodrigues": null,
+            "Sd Pm 885/18 Albert": null,
+            "Sd Pm 502/22 Sales": "869293",
+            "SD PM 572/22 Theodosio": "871896",
+            "Sd Pm 457/24 Eduardo Silva": "869987"
+        };
+        
         const pmSubstituidoNomeInput = document.getElementById('pmSubstituidoNome');
         const pmSubstituidoIdentificacaoInput = document.getElementById('pmSubstituidoIdentificacao');
         const pmSubstitutoNomeInput = document.getElementById('pmSubstitutoNome');
         const pmSubstitutoIdentificacaoInput = document.getElementById('pmSubstitutoIdentificacao');
 
         pmSubstituidoNomeInput.addEventListener('input', (event) => {
-            const selectedPm = pmList.find(pm => pm.name === event.target.value);
-            if (selectedPm) {
-                pmSubstituidoIdentificacaoInput.value = selectedPm.pmId || '';
+            const selectedName = event.target.value;
+            if (pmData[selectedName]) {
+                pmSubstituidoIdentificacaoInput.value = pmData[selectedName];
             } else {
                 pmSubstituidoIdentificacaoInput.value = '';
             }
         });
         
         pmSubstitutoNomeInput.addEventListener('input', (event) => {
-            const selectedPm = pmList.find(pm => pm.name === event.target.value);
-            if (selectedPm) {
-                pmSubstitutoIdentificacaoInput.value = selectedPm.pmId || '';
+            const selectedName = event.target.value;
+            if (pmData[selectedName]) {
+                pmSubstitutoIdentificacaoInput.value = pmData[selectedName];
             } else {
                 pmSubstitutoIdentificacaoInput.value = '';
             }
         });
+
+        function updatePmList() {
+            const pmList = document.getElementById('pmList');
+            const turiacuCheckbox = document.querySelector('input[name="localizacao"][value="DPM TURIAÇU"]');
+
+            // Limpa a lista existente
+            pmList.innerHTML = '';
+
+            if (turiacuCheckbox.checked) {
+                for (const name in pmData) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    pmList.appendChild(option);
+                }
+            }
+        }
 
         function validateLocalizacao() {
             const warning = document.getElementById('localizacaoWarning');
@@ -465,6 +298,11 @@
                 warning.classList.remove('hidden');
                 return false;
             }
+        }
+
+        function validateBrasao() {
+            // Não há mais upload, então sempre retorna true
+            return true;
         }
 
         function validateField(fieldId, warningId) {
@@ -525,6 +363,7 @@
 
         const dateFields = [
             { start: 'dataServicoPermutadoInicio', end: 'dataServicoPermutadoFim', warn: 'dateWarning' },
+            { start: 'dataPagamentoServicoInicio', end: 'dataPagamentoServicoFim', warn: 'dateWarning' }
         ];
         
         dateFields.forEach(field => {
@@ -547,6 +386,7 @@
         
         function validateAllFields() {
             let isValid = true;
+            isValid = validateBrasao() && isValid;
             isValid = validateLocalizacao() && isValid;
             isValid = validateField('pmSubstituidoNome', 'pmSubstituidoNomeWarning') && isValid;
             isValid = validateField('pmSubstituidoIdentificacao', 'pmSubstituidoIdentificacaoWarning') && isValid;
@@ -606,9 +446,43 @@
             return result;
         }
 
-        window.printForm = function() {
+        function sendEmail() {
             if (!validateAllFields()) {
-                showCustomModal('Erro de Validação', 'Por favor, preencha todos os campos obrigatórios antes de concluir a permuta.');
+                return;
+            }
+
+            const pmSubstituidoNome = document.getElementById('pmSubstituidoNome').value.toUpperCase();
+            const pmSubstituidoId = document.getElementById('pmSubstituidoIdentificacao').value;
+            const pmSubstitutoNome = document.getElementById('pmSubstitutoNome').value.toUpperCase();
+            const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
+            const servicoPermutadoInicio = document.getElementById('dataServicoPermutadoInicio').value;
+            const servicoPermutadoFim = document.getElementById('dataServicoPermutadoFim').value;
+            const pagamentoServicoInicio = document.getElementById('dataPagamentoServicoInicio').value;
+            const pagamentoServicoFim = document.getElementById('dataPagamentoServicoFim').value;
+            const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox').checked;
+
+            const servicoPermutadoTexto = formatarDataRange(servicoPermutadoInicio, servicoPermutadoFim);
+            const pagamentoServicoTexto = noPagamentoCheckbox ? 'Não há pagamento de serviço.' : formatarDataRange(pagamentoServicoInicio, pagamentoServicoFim);
+        
+            const subject = "Formulário de Permuta de Serviço";
+            const body = `
+            FORMULÁRIO DE PERMUTA DE SERVIÇO
+            
+            PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}
+            PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}
+
+            DATA(S) DO SERVIÇO PERMUTADO: ${servicoPermutadoTexto}
+            DATA(S) DO PAGAMENTO DO SERVIÇO: ${pagamentoServicoTexto}
+            
+            Favor preencher e anexar o PDF do formulário impresso.
+            `;
+            
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(mailtoLink, '_blank');
+        }
+
+        function printForm() {
+            if (!validateAllFields()) {
                 return;
             }
             
@@ -684,46 +558,54 @@
                 </head>
                 <body>
                     <div class="container">
-                        <div class="text-center" style="line-height: 1.15; margin: 0;">
-                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
-                            <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
-                            <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA DE SEGURANÇA</p>
-                            <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
-                            <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
-                            <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
-                            <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
-                            <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 mb-4">
-                        <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
-                    </div>
-                    
-                    <div style="margin-bottom: 0,25rem;">
-                        <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}</p>
-                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
-                    </div>
-                    
-                    <div style="margin-bottom: 0,25rem;">
-                        <p class="text-base">PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}</p>
-                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
-                    </div>
-                    
-                    <div class="mb-2">
-                        <p class="text-base">Data do serviço permutado: ${servicoPermutadoTexto}</p>
-                        ${pagamentoHtml}
-                    </div>
-                    
-                    <div class="mb-4" style="text-align: left; margin-left: 20px;">
-                        <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
-                    </div>
+    <div class="text-center" style="line-height: 1.15; margin: 0;">
+        <img src="${brasaoUrlPrint}" alt="Brasão" 
+             style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
 
-                    <div class="text-center" style="margin-top: 2rem;">
-                        <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
-                        <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
-                        <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
-                        <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
+        <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
+        <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA DE SEGURANÇA</p>
+        <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
+        <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+        <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+        <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+
+        <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+    </div>
+</div>
+
+        
+                        <div class="mt-4 mb-4">
+                            <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
+                        </div>
+        
+                        <div style="margin-bottom: 0,25rem;">
+                            <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
+        
+                        <div style="margin-bottom: 0,25rem;">
+                            <p class="text-base">PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <p class="text-base">Data do serviço permutado: ${servicoPermutadoTexto}</p>
+                            ${pagamentoHtml}
+                        </div>
+        
+                        <div class="mb-4" style="text-align: left; margin-left: 20px;">
+                            <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                        </div>
+
+                        <div class="text-center" style="margin-top: 2rem;">
+    <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: (  ) Sim  (  ) Não</p>
+
+<p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
+<p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
+
+    <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
+</div>
+
                     </div>
                 </body>
                 </html>
@@ -738,8 +620,18 @@
                 printWindow.focus();
                 printWindow.print();
             } else {
-                showCustomModal('Aviso', 'Por favor, habilite pop-ups para imprimir o formulário.');
+                // substitua o alerta por uma mensagem na tela
+                const alertBox = document.createElement('div');
+                alertBox.textContent = 'Por favor, habilite pop-ups para imprimir o formulário.';
+                alertBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffcccc; padding: 20px; border: 1px solid #ff0000; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; z-index: 1000;';
+                document.body.appendChild(alertBox);
+                setTimeout(() => document.body.removeChild(alertBox), 5000);
             }
+        }
+        
+        // Função de simulação para a assinatura digital do GOV.BR
+        function signWithGovBr() {
+            window.open('https://sso.acesso.gov.br/login?client_id=assinador.iti.br&authorization_id=198daa71163', '_blank');
         }
     </script>
 </body>
