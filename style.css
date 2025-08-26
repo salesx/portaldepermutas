@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f2f5; /* Um cinza mais suave para o fundo */
+}
+
+/* Esconde as setas de input de número */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Estilos para o spinner de carregamento */
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Classes de status com cores distintas */
+.status-Pendente { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.status-Aprovado { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.status-Negado { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.status-Correção { background-color: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+
+/* Transições suaves para mostrar/esconder elementos */
+.page {
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+}
+.page.hidden {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+    position: absolute;
+}
