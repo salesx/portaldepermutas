@@ -169,6 +169,7 @@
                     <!-- Abas do Comandante -->
                     <nav id="comandante-nav" class="-mb-px flex space-x-8" aria-label="Tabs">
                         <button onclick="showTab('comandante-dashboard')" id="tab-comandante-dashboard" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Solicitações</button>
+                        <button onclick="showTab('comandante-history')" id="tab-comandante-history" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Histórico</button>
                         <button onclick="showTab('comandante-user-management')" id="tab-comandante-user-management" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gerenciar Usuários</button>
                     </nav>
                 </div>
@@ -179,6 +180,7 @@
                 <!-- ===== PÁGINA/ABA: NOVA SOLICITAÇÃO (Solicitante) ===== -->
                 <div id="nova-solicitacao-content" class="tab-pane">
                     <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10 max-w-4xl mx-auto">
+                        <input type="hidden" id="editing-request-id">
                         <div class="flex flex-col items-center justify-center text-center p-4 bg-gray-800 text-white rounded-t-xl mb-8">
                             <h1 class="text-xl font-bold tracking-wide">POLÍCIA MILITAR DO MARANHÃO</h1>
                             <p class="text-sm font-light">COMANDO DE POLICIAMENTO DE ÁREA DO INTERIOR-5</p>
@@ -209,7 +211,7 @@
                                         </div>
                                         <div>
                                             <label for="pmSubstituidoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
-                                            <input type="number" id="pmSubstituidoIdentificacao" placeholder="ID preenchido automaticamente" class="w-full mt-1 p-3 border border-gray-300 bg-gray-200 cursor-not-allowed rounded-md" readonly>
+                                            <input type="number" id="pmSubstituidoIdentificacao" placeholder="Digite o ID" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 rounded-md">
                                         </div>
                                     </div>
                                 </div>
@@ -222,7 +224,7 @@
                                         </div>
                                         <div>
                                             <label for="pmSubstitutoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
-                                            <input type="number" id="pmSubstitutoIdentificacao" placeholder="ID preenchido automaticamente" class="w-full mt-1 p-3 border border-gray-300 bg-gray-200 cursor-not-allowed rounded-md" readonly>
+                                            <input type="number" id="pmSubstitutoIdentificacao" placeholder="Digite o ID" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 rounded-md">
                                         </div>
                                     </div>
                                 </div>
@@ -340,68 +342,9 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- ===== PÁGINA: GERENCIAR USUÁRIOS (Comandante) ===== -->
-                <div id="comandante-user-management-content" class="tab-pane hidden">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-3xl font-bold">Gerenciar Usuários</h2>
-                        <button onclick="openUserEditModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
-                            Adicionar Usuário
-                        </button>
-                    </div>
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left text-gray-500">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3">Nome Completo</th>
-                                        <th scope="col" class="px-6 py-3">ID</th>
-                                        <th scope="col" class="px-6 py-3 text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="user-management-list"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
-
-    <!-- ===== MODAL DE EDIÇÃO/CRIAÇÃO DE USUÁRIO (Comandante) ===== -->
-    <div id="user-edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <h3 class="text-xl font-bold mb-6" id="user-modal-title">Adicionar Novo Usuário</h3>
-            <form id="user-edit-form" onsubmit="saveUser(event)" class="space-y-4">
-                <input type="hidden" id="user-original-fullname">
-                <div>
-                    <label for="user-graduacao" class="text-sm font-medium">Graduação</label>
-                    <select id="user-graduacao" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                        <option value="SD PM">SD PM</option> <option value="CB PM">CB PM</option>
-                        <option value="SGT PM">SGT PM</option> <option value="ST PM">ST PM</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="user-numero-barra" class="text-sm font-medium">Número/Barra</label>
-                    <input type="text" id="user-numero-barra" placeholder="Ex: 502/22" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label for="user-nome-guerra" class="text-sm font-medium">Nome de Guerra</label>
-                    <input type="text" id="user-nome-guerra" placeholder="Ex: Sales" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label for="user-id" class="text-sm font-medium">ID de Acesso</label>
-                    <input type="number" id="user-id" placeholder="ID numérico do usuário" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                </div>
-                <div class="flex justify-end gap-4 pt-4">
-                    <button type="button" onclick="closeUserEditModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 
     <!-- ===== MODAL DE DETALHES (Comandante) ===== -->
     <div id="details-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
@@ -682,10 +625,7 @@
         });
 
         function populateRequestFormWithUserData() {
-            if (currentUser.profile.fullName) {
-                document.getElementById('pmSubstituidoNome').value = currentUser.profile.fullName;
-                document.getElementById('pmSubstituidoIdentificacao').value = currentUser.profile.id;
-            }
+            // This function is no longer needed as the user can be either party.
         }
 
         function loadUserProfile() {
