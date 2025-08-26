@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Portal de Permuta de Serviço</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased text-gray-800">
+
+    <div id="login-page" class="page min-h-screen flex items-center justify-center bg-gray-800 p-4">
+        <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-gray-800">Portal de Permutas</h1>
+                <p class="text-gray-500 mt-2">Acesse com seus dados</p>
+            </div>
+            
+            <form id="solicitante-login-form" onsubmit="handleSolicitanteLogin(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label for="login-name" class="text-sm font-medium text-gray-700">Nome de Guerra</label>
+                        <input type="text" id="login-name" required class="w-full mt-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" placeholder="Digite seu nome de guerra">
+                    </div>
+                    <div>
+                        <label for="login-id" class="text-sm font-medium text-gray-700">ID de Acesso</label>
+                        <input type="password" id="login-id" required class="w-full mt-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" placeholder="Digite seu ID">
+                    </div>
+                </div>
+                <p id="login-error" class="text-sm text-red-600 mt-4 text-center hidden"></p>
+                <button type="submit" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Entrar
+                </button>
+            </form>
+
+            <div class="text-center mt-6 flex justify-between items-center">
+                <button onclick="showRegistrationPage()" class="text-sm text-blue-600 hover:underline">Criar novo cadastro</button>
+                <button onclick="openPinModal()" class="text-sm text-gray-500 hover:text-blue-600 hover:underline">Acesso do Comandante</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="registration-page" class="page hidden min-h-screen flex items-center justify-center bg-gray-800 p-4">
+        <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
+            <h2 class="text-2xl font-bold text-center mb-6">Novo Cadastro</h2>
+            <form id="registration-form" onsubmit="handleRegistration(event)" class="space-y-4">
+                <div>
+                    <label for="reg-graduacao" class="text-sm font-medium">Graduação</label>
+                    <select id="reg-graduacao" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
+                        <option value="SD PM">SD PM</option>
+                        <option value="CB PM">CB PM</option>
+                        <option value="SGT PM">SGT PM</option>
+                        <option value="ST PM">ST PM</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="reg-numero-barra" class="text-sm font-medium">Número/Barra</label>
+                    <input type="text" id="reg-numero-barra" placeholder="Ex: 502/22" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="reg-nome-guerra" class="text-sm font-medium">Nome de Guerra</label>
+                    <input type="text" id="reg-nome-guerra" placeholder="Ex: Sales" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="reg-id" class="text-sm font-medium">Insira seu ID</label>
+                    <input type="password" id="reg-id" placeholder="Crie um ID numérico" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
+                </div>
+                <p id="reg-error" class="text-sm text-red-600 text-center hidden"></p>
+                <button type="submit" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl">Cadastrar</button>
+                <button type="button" onclick="showLoginPage()" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">Voltar para o Login</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="pin-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+            <h3 class="text-xl font-bold mb-2">Acesso Restrito</h3>
+            <p class="text-gray-600 mb-6">Digite o PIN do Comandante para continuar.</p>
+            <input type="password" id="pin-input" class="w-full p-3 text-center text-2xl tracking-[.5em] border border-gray-300 rounded-md mb-4" maxlength="6">
+            <p id="pin-error" class="text-sm text-red-600 mb-4 hidden">PIN incorreto. Tente novamente.</p>
+            <div class="flex justify-center gap-4">
+                <button onclick="closePinModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancelar</button>
+                <button onclick="handleComandanteLogin()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-container" class="page hidden min-h-screen">
+        <header class="bg-white shadow-md sticky top-0 z-10">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-blue-600"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z" /></svg>
+                        <span class="ml-3 text-xl font-bold">Portal de Permutas</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm font-medium">Bem-vindo, <span id="user-role-display"></span>!</span>
+                        <button onclick="logout()" class="text-gray-500 hover:text-red-600 transition-colors" title="Sair">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <div id="dashboard-nav" class="mb-6">
+                <div class="border-b border-gray-200">
+                    <nav id="solicitante-nav" class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button onclick="showTab('nova-solicitacao')" id="tab-nova-solicitacao" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Nova Solicitação</button>
+                        <button onclick="showTab('minhas-solicitacoes')" id="tab-minhas-solicitacoes" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Minhas Solicitações</button>
+                        <button onclick="showTab('meu-perfil')" id="tab-meu-perfil" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Meu Perfil</button>
+                    </nav>
+                    <nav id="comandante-nav" class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button onclick="showTab('comandante-dashboard')" id="tab-comandante-dashboard" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Solicitações</button>
+                        <button onclick="showTab('comandante-history')" id="tab-comandante-history" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Histórico</button>
+                        <button onclick="showTab('comandante-user-management')" id="tab-comandante-user-management" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gerenciar Usuários</button>
+                    </nav>
+                </div>
+            </div>
+
+            <div id="tab-content">
+                <div id="nova-solicitacao-content" class="tab-pane">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10 max-w-4xl mx-auto">
+                        <input type="hidden" id="editing-request-id">
+                        <div class="flex flex-col items-center justify-center text-center p-4 bg-gray-800 text-white rounded-t-xl mb-8">
+                            <h1 class="text-xl font-bold tracking-wide">POLÍCIA MILITAR DO MARANHÃO</h1>
+                            <p class="text-sm font-light">COMANDO DE POLICIAMENTO DE ÁREA DO INTERIOR-5</p>
+                        </div>
+                        <h2 class="text-2xl font-extrabold text-center text-gray-800 my-8">FORMULÁRIO DE PERMUTA DE SERVIÇO</h2>
+                        
+                        <div class="space-y-8">
+                            <div>
+                                <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">Localização</h5>
+                                <div class="flex flex-wrap gap-6">
+                                    <label class="flex items-center text-base text-gray-700 cursor-pointer"><input type="radio" name="localizacao" value="SEDE" class="form-radio h-5 w-5 text-blue-600"><span class="ml-2 font-medium">SEDE</span></label>
+                                    <label class="flex items-center text-base text-gray-700 cursor-pointer"><input type="radio" name="localizacao" value="DPM TURILÂNDIA" class="form-radio h-5 w-5 text-blue-600"><span class="ml-2 font-medium">DPM TURILÂNDIA</span></label>
+                                    <label class="flex items-center text-base text-gray-700 cursor-pointer"><input type="radio" name="localizacao" value="DPM TURIAÇU" class="form-radio h-5 w-5 text-blue-600"><span class="ml-2 font-medium">DPM TURIAÇU</span></label>
+                                </div>
+                                <p id="localizacaoWarning" class="text-sm text-red-600 mt-2 hidden font-semibold">Selecione uma localização.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t-2 pt-6">
+                                <div>
+                                    <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">PM SUBSTITUÍDO</h5>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="pmSubstituidoNome" class="text-sm font-medium text-gray-600 block">Nome:</label>
+                                            <input type="text" id="pmSubstituidoNome" placeholder="Selecione ou digite o nome" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-md" list="pmList">
+                                        </div>
+                                        <div>
+                                            <label for="pmSubstituidoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
+                                            <input type="number" id="pmSubstituidoIdentificacao" placeholder="Digite o ID" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 rounded-md">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">PM SUBSTITUTO</h5>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="pmSubstitutoNome" class="text-sm font-medium text-gray-600 block">Nome:</label>
+                                            <input type="text" id="pmSubstitutoNome" placeholder="Selecione ou digite o nome" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-md" list="pmList">
+                                        </div>
+                                        <div>
+                                            <label for="pmSubstitutoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
+                                            <input type="number" id="pmSubstitutoIdentificacao" placeholder="Digite o ID" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 rounded-md">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <datalist id="pmList"></datalist>
+
+                            <div class="border-t-2 pt-6 space-y-4">
+                                <div>
+                                    <label class="text-sm font-bold text-gray-800 uppercase tracking-wide">DATA(S) DO SERVIÇO PERMUTADO</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                        <input type="date" id="dataServicoPermutadoInicio" class="w-full p-3 border border-gray-300 bg-gray-5
