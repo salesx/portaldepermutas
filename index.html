@@ -3,175 +3,636 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Portal de Permuta de Serviço</title>
+    <title>Formulário de Permuta de Serviço Oficial</title>
+    <!-- Inclui o Tailwind CSS para estilização moderna e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Estilos para a impressão e geração de PDF */
+        @media print {
+            body {
+                background-color: white;
+            }
+            .no-print {
+                display: none;
+            }
+            .printable-form {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+            }
+            input[type="text"], input[type="date"] {
+                border: none !important;
+                border-bottom: 1px solid #000 !important;
+                padding: 0 !important;
+            }
+        }
+        .input-error {
+            border-color: #ef4444;
+        }
+        #custom-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.75);
+        }
+    </style>
 </head>
-<body class="antialiased text-gray-800">
-
-    <div id="login-page" class="page min-h-screen flex items-center justify-center bg-gray-800 p-4">
-        <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-extrabold text-gray-800">Portal de Permutas</h1>
-                <p class="text-gray-500 mt-2">Acesse com seus dados</p>
-            </div>
-            
-            <form id="solicitante-login-form" onsubmit="handleSolicitanteLogin(event)">
-                <div class="space-y-4">
-                    <div>
-                        <label for="login-name" class="text-sm font-medium text-gray-700">Nome de Guerra</label>
-                        <input type="text" id="login-name" required class="w-full mt-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" placeholder="Digite seu nome de guerra">
-                    </div>
-                    <div>
-                        <label for="login-id" class="text-sm font-medium text-gray-700">ID de Acesso</label>
-                        <input type="password" id="login-id" required class="w-full mt-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" placeholder="Digite seu ID">
-                    </div>
-                </div>
-                <p id="login-error" class="text-sm text-red-600 mt-4 text-center hidden"></p>
-                <button type="submit" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
-                    Entrar
-                </button>
-            </form>
-
-            <div class="text-center mt-6 flex justify-between items-center">
-                <button onclick="showRegistrationPage()" class="text-sm text-blue-600 hover:underline">Criar novo cadastro</button>
-                <button onclick="openPinModal()" class="text-sm text-gray-500 hover:text-blue-600 hover:underline">Acesso do Comandante</button>
-            </div>
+<body class="p-6 md:p-12">
+    <div id="custom-alert" class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-[9999]">
+        <div class="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full text-center">
+            <h3 class="text-xl font-bold mb-4" id="alert-title"></h3>
+            <p class="text-gray-700 mb-6" id="alert-message"></p>
+            <button onclick="closeCustomAlert()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">OK</button>
         </div>
     </div>
-
-    <div id="registration-page" class="page hidden min-h-screen flex items-center justify-center bg-gray-800 p-4">
-        <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
-            <h2 class="text-2xl font-bold text-center mb-6">Novo Cadastro</h2>
-            <form id="registration-form" onsubmit="handleRegistration(event)" class="space-y-4">
-                <div>
-                    <label for="reg-graduacao" class="text-sm font-medium">Graduação</label>
-                    <select id="reg-graduacao" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                        <option value="SD PM">SD PM</option>
-                        <option value="CB PM">CB PM</option>
-                        <option value="SGT PM">SGT PM</option>
-                        <option value="ST PM">ST PM</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="reg-numero-barra" class="text-sm font-medium">Número/Barra</label>
-                    <input type="text" id="reg-numero-barra" placeholder="Ex: 502/22" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label for="reg-nome-guerra" class="text-sm font-medium">Nome de Guerra</label>
-                    <input type="text" id="reg-nome-guerra" placeholder="Ex: Sales" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label for="reg-id" class="text-sm font-medium">Insira seu ID</label>
-                    <input type="password" id="reg-id" placeholder="Crie um ID numérico" required class="w-full mt-1 p-3 border border-gray-300 rounded-md">
-                </div>
-                <p id="reg-error" class="text-sm text-red-600 text-center hidden"></p>
-                <button type="submit" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl">Cadastrar</button>
-                <button type="button" onclick="showLoginPage()" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">Voltar para o Login</button>
-            </form>
+    <div class="printable-form bg-white rounded-3xl shadow-3d p-6 md:p-10 max-w-4xl mx-auto border-4 border-gray-800">
+        
+        <!-- Cabeçalho tipo folha timbrada - Brasão removido da visualização no-print -->
+        <div class="flex flex-col items-center justify-center text-center p-4 bg-gray-800 text-white rounded-t-2xl no-print">
+            <h1 class="text-xl font-bold tracking-wide">ESTADO DO MARANHÃO</h1>
+            <p class="text-sm font-light">SECRETARIA DE SEGURANÇA PÚBLICA</p>
+            <p class="text-sm font-light">COMANDO DE POLICIAMENTO DE ÁREA DO INTERIOR-5 (CPA/I-5)</p>
+            <p class="text-xs mt-1 font-extralight">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO - 2ª CIA</p>
         </div>
-    </div>
-    
-    <div id="pin-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
-            <h3 class="text-xl font-bold mb-2">Acesso Restrito</h3>
-            <p class="text-gray-600 mb-6">Digite o PIN do Comandante para continuar.</p>
-            <input type="password" id="pin-input" class="w-full p-3 text-center text-2xl tracking-[.5em] border border-gray-300 rounded-md mb-4" maxlength="6">
-            <p id="pin-error" class="text-sm text-red-600 mb-4 hidden">PIN incorreto. Tente novamente.</p>
-            <div class="flex justify-center gap-4">
-                <button onclick="closePinModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancelar</button>
-                <button onclick="handleComandanteLogin()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">Entrar</button>
+        
+        <h2 class="text-2xl font-extrabold text-center text-gray-800 my-8">FORMULÁRIO DE PERMUTA DE SERVIÇO</h2>
+        
+        <!-- Campos para a localização -->
+        <div class="mb-6">
+            <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">Localização:</h5>
+            <div class="flex flex-wrap gap-6">
+                <label class="flex items-center text-base text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="localizacao" value="SEDE" class="form-checkbox h-5 w-5 rounded-md text-blue-600 border-gray-400 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    <span class="ml-2 font-medium">SEDE</span>
+                </label>
+                <label class="flex items-center text-base text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="localizacao" value="DPM TURILÂNDIA" class="form-checkbox h-5 w-5 rounded-md text-blue-600 border-gray-400 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    <span class="ml-2 font-medium">DPM TURILÂNDIA</span>
+                </label>
+                <label class="flex items-center text-base text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="localizacao" value="DPM TURIAÇU" class="form-checkbox h-5 w-5 rounded-md text-blue-600 border-gray-400 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    <span class="ml-2 font-medium">DPM TURIAÇU</span>
+                </label>
+            </div>
+            <p id="localizacaoWarning" class="text-sm text-red-600 mt-2 hidden font-semibold">Selecione uma localização.</p>
+        </div>
+        
+        <!-- Campos para o PM Substituído -->
+        <div class="mb-6 border-t-2 pt-6">
+            <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">PM SUBSTITUÍDO:</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="pmSubstituidoNome" class="text-sm font-medium text-gray-600 block">Nome:</label>
+                    <input type="text" id="pmSubstituidoNome" placeholder="SD PM 001/22 FULANO" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md" list="pmList">
+                    <p id="pmSubstituidoNomeWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                </div>
+                <div>
+                    <label for="pmSubstituidoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
+                    <input type="tel" id="pmSubstituidoIdentificacao" placeholder="012345" pattern="\d*" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
+                    <p id="pmSubstituidoIdentificacaoWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="dashboard-container" class="page hidden min-h-screen">
-        <header class="bg-white shadow-md sticky top-0 z-10">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-blue-600"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z" /></svg>
-                        <span class="ml-3 text-xl font-bold">Portal de Permutas</span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="text-sm font-medium">Bem-vindo, <span id="user-role-display"></span>!</span>
-                        <button onclick="logout()" class="text-gray-500 hover:text-red-600 transition-colors" title="Sair">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
-                        </button>
-                    </div>
+        <!-- Campos para o PM Substituto -->
+        <div class="mb-6">
+            <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">PM SUBSTITUTO:</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="pmSubstitutoNome" class="text-sm font-medium text-gray-600 block">Nome:</label>
+                    <input type="text" id="pmSubstitutoNome" placeholder="SD PM 001/22 FULANO" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md" list="pmList">
+                    <p id="pmSubstitutoNomeWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                </div>
+                <div>
+                    <label for="pmSubstitutoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
+                    <input type="tel" id="pmSubstitutoIdentificacao" placeholder="012345" pattern="\d*" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
+                    <p id="pmSubstitutoIdentificacaoWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <main class="container mx-auto p-4 sm:p-6 lg:p-8">
-            <div id="dashboard-nav" class="mb-6">
-                <div class="border-b border-gray-200">
-                    <nav id="solicitante-nav" class="-mb-px flex space-x-8" aria-label="Tabs">
-                        <button onclick="showTab('nova-solicitacao')" id="tab-nova-solicitacao" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Nova Solicitação</button>
-                        <button onclick="showTab('minhas-solicitacoes')" id="tab-minhas-solicitacoes" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Minhas Solicitações</button>
-                        <button onclick="showTab('meu-perfil')" id="tab-meu-perfil" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Meu Perfil</button>
-                    </nav>
-                    <nav id="comandante-nav" class="-mb-px flex space-x-8" aria-label="Tabs">
-                        <button onclick="showTab('comandante-dashboard')" id="tab-comandante-dashboard" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Solicitações</button>
-                        <button onclick="showTab('comandante-history')" id="tab-comandante-history" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Histórico</button>
-                        <button onclick="showTab('comandante-user-management')" id="tab-comandante-user-management" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gerenciar Usuários</button>
-                    </nav>
-                </div>
-            </div>
+        <!-- Datalist para a lista de PMs -->
+        <datalist id="pmList"></datalist>
 
-            <div id="tab-content">
-                <div id="nova-solicitacao-content" class="tab-pane">
-                    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10 max-w-4xl mx-auto">
-                        <input type="hidden" id="editing-request-id">
-                        <div class="flex flex-col items-center justify-center text-center p-4 bg-gray-800 text-white rounded-t-xl mb-8">
-                            <h1 class="text-xl font-bold tracking-wide">POLÍCIA MILITAR DO MARANHÃO</h1>
-                            <p class="text-sm font-light">COMANDO DE POLICIAMENTO DE ÁREA DO INTERIOR-5</p>
+        <!-- Campos para as datas e tipo de serviço -->
+        <div class="mb-6 border-t-2 pt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col">
+                    <label class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-2">DATA(S) DO SERVIÇO PERMUTADO:</label>
+                    <p class="text-xs text-gray-500 mb-2">Escolha entre 1 a 3 dias consecutivos</p>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="w-full">
+                            <label for="dataServicoPermutadoInicio" class="text-xs text-gray-500 block">Início:</label>
+                            <input type="date" id="dataServicoPermutadoInicio" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
+                            <p id="dataServicoPermutadoInicioWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
                         </div>
-                        <h2 class="text-2xl font-extrabold text-center text-gray-800 my-8">FORMULÁRIO DE PERMUTA DE SERVIÇO</h2>
+                        <div class="w-full">
+                            <label for="dataServicoPermutadoFim" class="text-xs text-gray-500 block">Término:</label>
+                            <input type="date" id="dataServicoPermutadoFim" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
+                            <p id="dataServicoPermutadoFimWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-bold text-gray-800 uppercase tracking-wide">DATA(S) DO PAGAMENTO DO SERVIÇO:</label>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="noPagamentoCheckbox" class="form-checkbox h-4 w-4 rounded text-blue-600 border-gray-400 focus:ring-blue-500">
+                            <label for="noPagamentoCheckbox" class="text-xs text-gray-600 ml-2">Não há pagamento</label>
+                        </div>
+                    </div>
+                    <div id="pagamentoServicoFields" class="flex flex-col md:flex-row gap-4">
+                        <div class="w-full">
+                            <label for="dataPagamentoServicoInicio" class="text-xs text-gray-500 block">Início:</label>
+                            <input type="date" id="dataPagamentoServicoInicio" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
+                        </div>
+                        <div class="w-full">
+                            <label for="dataPagamentoServicoFim" class="text-xs text-gray-500 block">Término:</label>
+                            <input type="date" id="dataPagamentoServicoFim" class="w-full mt-1 p-3 border-b-2 border-gray-300 bg-gray-50 focus:outline-none focus:border-blue-500 transition-colors duration-200 rounded-md">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p id="dateWarning" class="text-sm text-red-600 mt-4 text-center hidden">A diferença entre as datas não pode ser superior a 3 dias.</p>
+        </div>
+        
+        <!-- Botões de ação do formulário -->
+        <div class="no-print flex flex-col md:flex-row justify-center items-center gap-4 mt-8">
+            <button onclick="printForm()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+                Concluir Permuta
+            </button>
+            <button onclick="signWithGovBr()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                Ir para o GOV.BR
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const brasaoUrl = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
+        
+        // Atribui a URL do brasão para a imagem no cabeçalho e para a impressão
+        const headerBrasaoElement = document.getElementById('header-brasao');
+        if (headerBrasaoElement) {
+            headerBrasaoElement.src = brasaoUrl;
+        }
+
+        function showCustomAlert(title, message) {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        window.closeCustomAlert = function() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        };
+
+        const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox');
+        const pagamentoServicoInicio = document.getElementById('dataPagamentoServicoInicio');
+        const pagamentoServicoFim = document.getElementById('dataPagamentoServicoFim');
+        const fields = document.getElementById('pagamentoServicoFields');
+
+        function checkPagamentoStatus() {
+            if (pagamentoServicoInicio.value.trim() === '' && pagamentoServicoFim.value.trim() === '') {
+                noPagamentoCheckbox.checked = true;
+                fields.classList.add('hidden');
+            } else {
+                noPagamentoCheckbox.checked = false;
+                fields.classList.remove('hidden');
+            }
+        }
+        
+        pagamentoServicoInicio.addEventListener('input', checkPagamentoStatus);
+        pagamentoServicoFim.addEventListener('input', checkPagamentoStatus);
+
+        noPagamentoCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                fields.classList.add('hidden');
+                pagamentoServicoInicio.value = '';
+                pagamentoServicoFim.value = '';
+            } else {
+                fields.classList.remove('hidden');
+            }
+        });
+        
+        const localizacaoCheckboxes = document.querySelectorAll('input[name="localizacao"]');
+        localizacaoCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    localizacaoCheckboxes.forEach(otherCheckbox => {
+                        if (otherCheckbox !== this) {
+                            otherCheckbox.checked = false;
+                        }
+                    });
+                }
+                updatePmList();
+                validateLocalizacao();
+            });
+        });
+
+        const pmData = {
+            "Cb Pm 626/14 Coriolano": null,
+            "Sd Pm 473/16 André": "849351",
+            "Sd Pm 408/18 Ribeiro": null,
+            "Sd Pm 424/18 Rodrigues": null,
+            "Sd Pm 885/18 Albert": null,
+            "Sd Pm 502/22 Sales": "869293",
+            "SD PM 572/22 Theodosio": "871896",
+            "Sd Pm 457/24 Eduardo Silva": "869987"
+        };
+        
+        const pmSubstituidoNomeInput = document.getElementById('pmSubstituidoNome');
+        const pmSubstituidoIdentificacaoInput = document.getElementById('pmSubstituidoIdentificacao');
+        const pmSubstitutoNomeInput = document.getElementById('pmSubstitutoNome');
+        const pmSubstitutoIdentificacaoInput = document.getElementById('pmSubstitutoIdentificacao');
+
+        pmSubstituidoNomeInput.addEventListener('input', (event) => {
+            const selectedName = event.target.value;
+            if (pmData[selectedName]) {
+                pmSubstituidoIdentificacaoInput.value = pmData[selectedName];
+            } else {
+                pmSubstituidoIdentificacaoInput.value = '';
+            }
+        });
+        
+        pmSubstitutoNomeInput.addEventListener('input', (event) => {
+            const selectedName = event.target.value;
+            if (pmData[selectedName]) {
+                pmSubstitutoIdentificacaoInput.value = pmData[selectedName];
+            } else {
+                pmSubstitutoIdentificacaoInput.value = '';
+            }
+        });
+
+        function updatePmList() {
+            const pmList = document.getElementById('pmList');
+            const turiacuCheckbox = document.querySelector('input[name="localizacao"][value="DPM TURIAÇU"]');
+
+            // Limpa a lista existente
+            pmList.innerHTML = '';
+
+            if (turiacuCheckbox.checked) {
+                for (const name in pmData) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    pmList.appendChild(option);
+                }
+            }
+        }
+
+        function validateLocalizacao() {
+            const warning = document.getElementById('localizacaoWarning');
+            const anyChecked = Array.from(localizacaoCheckboxes).some(cb => cb.checked);
+            if (anyChecked) {
+                warning.classList.add('hidden');
+                return true;
+            } else {
+                warning.classList.remove('hidden');
+                return false;
+            }
+        }
+
+        function validateBrasao() {
+            // Não há mais upload, então sempre retorna true
+            return true;
+        }
+
+        function validateField(fieldId, warningId) {
+            const field = document.getElementById(fieldId);
+            const warning = document.getElementById(warningId);
+            if (!field.value.trim()) {
+                field.classList.add('input-error');
+                warning.classList.remove('hidden');
+                return false;
+            } else {
+                field.classList.remove('input-error');
+                warning.classList.add('hidden');
+                return true;
+            }
+        }
+
+        function validateDateRange(startDateId, endDateId, warningId) {
+            const startDateInput = document.getElementById(startDateId);
+            const endDateInput = document.getElementById(endDateId);
+            const warningElement = document.getElementById(warningId);
+            let isValid = true;
+            
+            if (!startDateInput.value.trim()) {
+                startDateInput.classList.add('input-error');
+                document.getElementById('dataServicoPermutadoInicioWarning').classList.remove('hidden');
+                isValid = false;
+            } else {
+                startDateInput.classList.remove('input-error');
+                document.getElementById('dataServicoPermutadoInicioWarning').classList.add('hidden');
+            }
+
+            if (!endDateInput.value.trim()) {
+                endDateInput.classList.add('input-error');
+                document.getElementById('dataServicoPermutadoFimWarning').classList.remove('hidden');
+                isValid = false;
+            } else {
+                endDateInput.classList.remove('input-error');
+                document.getElementById('dataServicoPermutadoFimWarning').classList.add('hidden');
+            }
+
+            if (isValid && startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value + 'T00:00:00');
+                const endDate = new Date(endDateInput.value + 'T00:00:00');
+                
+                const diffTime = Math.abs(endDate - startDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays > 2) {
+                    warningElement.classList.remove('hidden');
+                    return false;
+                } else {
+                    warningElement.classList.add('hidden');
+                    return true;
+                }
+            }
+            return isValid;
+        }
+
+        const dateFields = [
+            { start: 'dataServicoPermutadoInicio', end: 'dataServicoPermutadoFim', warn: 'dateWarning' },
+            { start: 'dataPagamentoServicoInicio', end: 'dataPagamentoServicoFim', warn: 'dateWarning' }
+        ];
+        
+        dateFields.forEach(field => {
+            const startDateInput = document.getElementById(field.start);
+            const endDateInput = document.getElementById(field.end);
+            
+            startDateInput.addEventListener('change', () => validateDateRange(field.start, field.end, field.warn));
+            endDateInput.addEventListener('change', () => validateDateRange(field.start, field.end, field.warn));
+        });
+
+        const requiredFields = [
+            { id: 'pmSubstituidoNome', warningId: 'pmSubstituidoNomeWarning' },
+            { id: 'pmSubstituidoIdentificacao', warningId: 'pmSubstituidoIdentificacaoWarning' },
+            { id: 'pmSubstitutoNome', warningId: 'pmSubstitutoNomeWarning' },
+            { id: 'pmSubstitutoIdentificacao', warningId: 'pmSubstitutoIdentificacaoWarning' },
+        ];
+        requiredFields.forEach(field => {
+            document.getElementById(field.id).addEventListener('input', () => validateField(field.id, field.warningId));
+        });
+        
+        function validateAllFields() {
+            let isValid = true;
+            isValid = validateBrasao() && isValid;
+            isValid = validateLocalizacao() && isValid;
+            isValid = validateField('pmSubstituidoNome', 'pmSubstituidoNomeWarning') && isValid;
+            isValid = validateField('pmSubstituidoIdentificacao', 'pmSubstituidoIdentificacaoWarning') && isValid;
+            isValid = validateField('pmSubstitutoNome', 'pmSubstitutoNomeWarning') && isValid;
+            isValid = validateField('pmSubstitutoIdentificacao', 'pmSubstitutoIdentificacaoWarning') && isValid;
+            isValid = validateDateRange('dataServicoPermutadoInicio', 'dataServicoPermutadoFim', 'dateWarning') && isValid;
+            return isValid;
+        }
+        
+        function formatarDataRange(startDateStr, endDateStr) {
+            const dates = [];
+            let currentDate = new Date(startDateStr + 'T00:00:00');
+            const finalDate = new Date(endDateStr + 'T00:00:00');
+
+            if (startDateStr && endDateStr) {
+                while (currentDate <= finalDate) {
+                    dates.push(new Date(currentDate));
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            }
+            
+            if (dates.length === 0) {
+                return '';
+            }
+
+            if (dates.length === 1) {
+                const d = dates[0];
+                return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+            }
+
+            let result = '';
+            let currentMonth = dates[0].getMonth();
+            let currentYear = dates[0].getFullYear();
+            let daysInGroup = [];
+            
+            for (let i = 0; i < dates.length; i++) {
+                const d = dates[i];
+                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                    daysInGroup.push(String(d.getDate()).padStart(2, '0'));
+                } else {
+                    if (result !== '') {
+                        result += ' e ';
+                    }
+                    result += `${daysInGroup.join(', ')}/${String(currentMonth + 1).padStart(2, '0')}`;
+                    currentMonth = d.getMonth();
+                    currentYear = d.getFullYear();
+                    daysInGroup = [String(d.getDate()).padStart(2, '0')];
+                }
+            }
+            if (daysInGroup.length > 0) {
+                if (result !== '') {
+                    result += ' e ';
+                }
+                result += `${daysInGroup.join(' e ')}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
+            }
+            
+            return result;
+        }
+
+        function sendEmail() {
+            if (!validateAllFields()) {
+                return;
+            }
+
+            const pmSubstituidoNome = document.getElementById('pmSubstituidoNome').value.toUpperCase();
+            const pmSubstituidoId = document.getElementById('pmSubstituidoIdentificacao').value;
+            const pmSubstitutoNome = document.getElementById('pmSubstitutoNome').value.toUpperCase();
+            const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
+            const servicoPermutadoInicio = document.getElementById('dataServicoPermutadoInicio').value;
+            const servicoPermutadoFim = document.getElementById('dataServicoPermutadoFim').value;
+            const pagamentoServicoInicio = document.getElementById('dataPagamentoServicoInicio').value;
+            const pagamentoServicoFim = document.getElementById('dataPagamentoServicoFim').value;
+            const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox').checked;
+
+            const servicoPermutadoTexto = formatarDataRange(servicoPermutadoInicio, servicoPermutadoFim);
+            const pagamentoServicoTexto = noPagamentoCheckbox ? 'Não há pagamento de serviço.' : formatarDataRange(pagamentoServicoInicio, pagamentoServicoFim);
+        
+            const subject = "Formulário de Permuta de Serviço";
+            const body = `
+            FORMULÁRIO DE PERMUTA DE SERVIÇO
+            
+            PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}
+            PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}
+
+            DATA(S) DO SERVIÇO PERMUTADO: ${servicoPermutadoTexto}
+            DATA(S) DO PAGAMENTO DO SERVIÇO: ${pagamentoServicoTexto}
+            
+            Favor preencher e anexar o PDF do formulário impresso.
+            `;
+            
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(mailtoLink, '_blank');
+        }
+
+        function printForm() {
+            if (!validateAllFields()) {
+                return;
+            }
+            
+            // Coleta os dados do formulário
+            const pmSubstituidoNome = document.getElementById('pmSubstituidoNome').value.toUpperCase();
+            const pmSubstituidoId = document.getElementById('pmSubstituidoIdentificacao').value;
+            const pmSubstitutoNome = document.getElementById('pmSubstitutoNome').value.toUpperCase();
+            const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
+            const servicoPermutadoInicio = document.getElementById('dataServicoPermutadoInicio').value;
+            const servicoPermutadoFim = document.getElementById('dataServicoPermutadoFim').value;
+            const pagamentoServicoInicio = document.getElementById('dataPagamentoServicoInicio').value;
+            const pagamentoServicoFim = document.getElementById('dataPagamentoServicoFim').value;
+            const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox').checked;
+
+            // Coleta a localização selecionada
+            const localizacaoChecked = document.querySelector('input[name="localizacao"]:checked')?.value || ' ';
+            let localizacaoSede = localizacaoChecked === 'SEDE' ? 'X' : '&nbsp;';
+            let localizacaoTurilandia = localizacaoChecked === 'DPM TURILÂNDIA' ? 'X' : '&nbsp;';
+            let localizacaoTuriacu = localizacaoChecked === 'DPM TURIAÇU' ? 'X' : '&nbsp;';
+            
+            // Coleta o tipo de serviço com base na quantidade de dias
+            const diasServico = servicoPermutadoInicio && servicoPermutadoFim ? Math.ceil((new Date(servicoPermutadoFim) - new Date(servicoPermutadoInicio)) / (1000 * 60 * 60 * 24)) + 1 : 0;
+            let tipo24Horas = '&nbsp;';
+            let tipo48Horas = '&nbsp;';
+            let tipo72Horas = '&nbsp;';
+
+            if (diasServico === 1) {
+                tipo24Horas = 'X';
+            } else if (diasServico === 2) {
+                tipo48Horas = 'X';
+            } else if (diasServico >= 3) {
+                tipo72Horas = 'X';
+            }
+
+            const servicoPermutadoTexto = formatarDataRange(servicoPermutadoInicio, servicoPermutadoFim);
+            const pagamentoServicoTexto = formatarDataRange(pagamentoServicoInicio, pagamentoServicoFim);
+            
+            let pagamentoHtml = '';
+            if (!noPagamentoCheckbox) {
+                pagamentoHtml = `<p class="text-base mt-2">Data do pagamento do serviço: ${pagamentoServicoTexto}</p>`;
+            }
+            
+            const brasaoUrlPrint = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Formulário de Permuta - Impressão</title>
+                    <style>
+                        body {
+                            font-family: 'Times New Roman', Times, serif;
+                            margin: 1.5cm; /* Margens reduzidas para caber em uma página */
+                            padding: 0;
+                            line-height: 1.15;
+                        }
+                        .container {
+                            width: 100%;
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }
+                        .text-center { text-align: center; }
+                        .text-sm { font-size: 0.875rem; }
+                        .text-xs { font-size: 0.75rem; }
+                        .text-base { font-size: 1rem; }
+                        .mt-2 { margin-top: 0.5rem; }
+                        .mt-4 { margin-top: 1rem; }
+                        .mt-8 { margin-top: 2rem; }
+                        .mb-6 { margin-bottom: 1.5rem; }
+                        .font-bold { font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+    <div class="text-center" style="line-height: 1.15; margin: 0;">
+        <img src="${brasaoUrlPrint}" alt="Brasão" 
+             style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
+
+        <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
+        <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA DE SEGURANÇA</p>
+        <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
+        <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+        <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+        <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+
+        <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+    </div>
+</div>
+
+        
+                        <div class="mt-4 mb-4">
+                            <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
+                        </div>
+        
+                        <div style="margin-bottom: 0,25rem;">
+                            <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
+        
+                        <div style="margin-bottom: 0,25rem;">
+                            <p class="text-base">PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
                         
-                        <div class="space-y-8">
-                            <div>
-                                <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">Localização</h5>
-                                <div class="flex flex-wrap gap-6">
-                                    <label class="flex items-center text-base text-gray-700 cursor-pointer"><input type="radio" name="localizacao" value="SEDE" class="form-radio h-5 w-5 text-blue-600"><span class="ml-2 font-medium">SEDE</span></label>
-                                    <label class="flex items-center text-base text-gray-700 cursor-pointer"><input type="radio" name="localizacao" value="DPM TURILÂNDIA" class="form-radio h-5 w-5 text-blue-600"><span class="ml-2 font-medium">DPM TURILÂNDIA</span></label>
-                                    <label class="flex items-center text-base text-gray-700 cursor-pointer"><input type="radio" name="localizacao" value="DPM TURIAÇU" class="form-radio h-5 w-5 text-blue-600"><span class="ml-2 font-medium">DPM TURIAÇU</span></label>
-                                </div>
-                                <p id="localizacaoWarning" class="text-sm text-red-600 mt-2 hidden font-semibold">Selecione uma localização.</p>
-                            </div>
+                        <div class="mb-2">
+                            <p class="text-base">Data do serviço permutado: ${servicoPermutadoTexto}</p>
+                            ${pagamentoHtml}
+                        </div>
+        
+                        <div class="mb-4" style="text-align: left; margin-left: 20px;">
+                            <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                        </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t-2 pt-6">
-                                <div>
-                                    <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">PM SUBSTITUÍDO</h5>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label for="pmSubstituidoNome" class="text-sm font-medium text-gray-600 block">Nome:</label>
-                                            <input type="text" id="pmSubstituidoNome" placeholder="Selecione ou digite o nome" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-md" list="pmList">
-                                        </div>
-                                        <div>
-                                            <label for="pmSubstituidoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
-                                            <input type="number" id="pmSubstituidoIdentificacao" placeholder="Digite o ID" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 rounded-md">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h5 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">PM SUBSTITUTO</h5>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label for="pmSubstitutoNome" class="text-sm font-medium text-gray-600 block">Nome:</label>
-                                            <input type="text" id="pmSubstitutoNome" placeholder="Selecione ou digite o nome" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-md" list="pmList">
-                                        </div>
-                                        <div>
-                                            <label for="pmSubstitutoIdentificacao" class="text-sm font-medium text-gray-600 block">ID:</label>
-                                            <input type="number" id="pmSubstitutoIdentificacao" placeholder="Digite o ID" class="w-full mt-1 p-3 border border-gray-300 bg-gray-50 rounded-md">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <datalist id="pmList"></datalist>
+                        <div class="text-center" style="margin-top: 2rem;">
+    <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: (  ) Sim  (  ) Não</p>
 
-                            <div class="border-t-2 pt-6 space-y-4">
-                                <div>
-                                    <label class="text-sm font-bold text-gray-800 uppercase tracking-wide">DATA(S) DO SERVIÇO PERMUTADO</label>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                                        <input type="date" id="dataServicoPermutadoInicio" class="w-full p-3 border border-gray-300 bg-gray-5
+<p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
+<p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
+
+    <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
+</div>
+
+                    </div>
+                </body>
+                </html>
+            `;
+
+            // Abre uma nova janela para a impressão
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.open();
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+            } else {
+                // substitua o alerta por uma mensagem na tela
+                const alertBox = document.createElement('div');
+                alertBox.textContent = 'Por favor, habilite pop-ups para imprimir o formulário.';
+                alertBox.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #ffcccc; padding: 20px; border: 1px solid #ff0000; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; z-index: 1000;';
+                document.body.appendChild(alertBox);
+                setTimeout(() => document.body.removeChild(alertBox), 5000);
+            }
+        }
+        
+        // Função de simulação para a assinatura digital do GOV.BR
+        function signWithGovBr() {
+            window.open('https://sso.acesso.gov.br/login?client_id=assinador.iti.br&authorization_id=198daa71163', '_blank');
+        }
+    </script>
+</body>
+</html>
