@@ -184,4 +184,203 @@
                     <p class="text-xs text-gray-500 mb-3">Se houver, selecione o período no calendário.</p>
                     <div id="pagamentoServicoFields" class="transition-opacity duration-300">
                          <input type="text" id="paymentDateRangePicker" placeholder="Clique para selecionar as datas de pagamento" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md cursor-pointer">
-                         <p
+                         <p id="paymentDateRangePickerWarning" class="text-xs text-red-500 mt-1 hidden">A seleção de um período (início e fim) é obrigatória.</p>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <!-- Botões de Ação -->
+        <div class="no-print flex flex-col md:flex-row justify-center items-center gap-4 mt-10 pt-6 border-t">
+            <button onclick="printForm()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                Gerar e Imprimir
+            </button>
+            <button onclick="signWithGovBr()" class="w-full md:w-auto bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                ir para GOV.BR
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Garante que o script rode apenas depois que o HTML for completamente carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuração do Flatpickr
+            flatpickr.localize(flatpickr.l10ns.pt);
+            
+            // Calendário para Serviço Permutado
+            const datePicker = flatpickr("#dateRangePicker", {
+                mode: "range",
+                dateFormat: "d/m/Y",
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 2) {
+                        const [start, end] = selectedDates;
+                        const diffTime = Math.abs(end - start);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        if (diffDays > 2) {
+                            showCustomAlert('Limite Excedido', 'Você só pode selecionar um intervalo de até 3 dias consecutivos.');
+                            instance.clear();
+                        }
+                    }
+                    validateField('dateRangePicker', 'dateRangePickerWarning');
+                }
+            });
+
+            // Calendário para Pagamento do Serviço
+            const paymentDatePicker = flatpickr("#paymentDateRangePicker", {
+                mode: "range",
+                dateFormat: "d/m/Y"
+            });
+
+            // Lógica do checkbox "Não há pagamento"
+            const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox');
+            noPagamentoCheckbox.addEventListener('change', function() {
+                const fields = document.getElementById('pagamentoServicoFields');
+                const pickerInput = document.getElementById('paymentDateRangePicker');
+                const warning = document.getElementById('paymentDateRangePickerWarning');
+
+                if (this.checked) {
+                    fields.classList.add('opacity-50', 'pointer-events-none');
+                    paymentDatePicker.clear();
+                    pickerInput.classList.remove('input-error');
+                    warning.classList.add('hidden');
+                } else {
+                    fields.classList.remove('opacity-50', 'pointer-events-none');
+                }
+            });
+
+            // Dados dos PMs
+            const pmData = {
+                "Cb Pm 626/14 Coriolano": "N/A", "Sd Pm 473/16 André": "849351", "Sd Pm 408/18 Ribeiro": "N/A",
+                "Sd Pm 424/18 Rodrigues": "N/A", "Sd Pm 885/18 Albert": "N/A", "Sd Pm 502/22 Sales": "869293",
+                "SD PM 572/22 Theodosio": "871896", "Sd Pm 457/24 Eduardo Silva": "869987"
+            };
+            
+            // Popula as listas suspensas de nomes
+            function populateNameDropdowns() {
+                const substituidoSelect = document.getElementById('pmSubstituidoNome');
+                const substitutoSelect = document.getElementById('pmSubstitutoNome');
+                const selects = [substituidoSelect, substitutoSelect];
+
+                selects.forEach(select => {
+                    select.innerHTML = ''; // Limpa opções existentes
+
+                    // Adiciona a opção padrão
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = "";
+                    defaultOption.textContent = "-- Selecione um nome --";
+                    defaultOption.disabled = true;
+                    defaultOption.selected = true;
+                    select.appendChild(defaultOption);
+
+                    // Adiciona os nomes do objeto pmData
+                    for (const name in pmData) {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        select.appendChild(option);
+                    }
+                });
+            }
+            
+            // Preenchimento automático do ID ao selecionar um nome
+            function setupNameSelection(nameSelect, idInput) {
+                nameSelect.addEventListener('change', (event) => {
+                    const selectedName = event.target.value;
+                    idInput.value = pmData[selectedName] || '';
+                    validateField(nameSelect.id, nameSelect.id + 'Warning');
+                    validateField(idInput.id, idInput.id + 'Warning');
+                });
+            }
+            
+            // Inicializa as funções de preenchimento
+            populateNameDropdowns();
+            setupNameSelection(document.getElementById('pmSubstituidoNome'), document.getElementById('pmSubstituidoIdentificacao'));
+            setupNameSelection(document.getElementById('pmSubstitutoNome'), document.getElementById('pmSubstitutoIdentificacao'));
+        });
+
+        // Funções globais (acessíveis via onclick)
+        function showCustomAlert(title, message) {
+            const alertContainer = document.getElementById('custom-alert');
+            const alertBox = document.getElementById('alert-box');
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            alertContainer.classList.remove('hidden');
+            setTimeout(() => {
+                alertContainer.style.opacity = '1';
+                alertBox.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        window.closeCustomAlert = function() {
+            const alertContainer = document.getElementById('custom-alert');
+            alertContainer.style.opacity = '0';
+            document.getElementById('alert-box').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => alertContainer.classList.add('hidden'), 300);
+        };
+
+        function validateLocalizacao() {
+            const field = document.getElementById('localizacaoSelect');
+            const warning = document.getElementById('localizacaoWarning');
+            const isValid = field.value.trim() !== '';
+            field.classList.toggle('input-error', !isValid);
+            warning.classList.toggle('hidden', isValid);
+            return isValid;
+        }
+
+        function validateField(fieldId, warningId) {
+            const field = document.getElementById(fieldId);
+            const warning = document.getElementById(warningId);
+            const isValid = field.value.trim() !== '';
+            field.classList.toggle('input-error', !isValid);
+            warning.classList.toggle('hidden', isValid);
+            return isValid;
+        }
+
+        function validateAllFields() {
+            let isValid = true;
+            isValid = validateLocalizacao() && isValid;
+            
+            const fieldsToValidate = [
+                { id: 'pmSubstituidoNome', warningId: 'pmSubstituidoNomeWarning' },
+                { id: 'pmSubstituidoIdentificacao', warningId: 'pmSubstituidoIdentificacaoWarning' },
+                { id: 'pmSubstitutoNome', warningId: 'pmSubstitutoNomeWarning' },
+                { id: 'pmSubstitutoIdentificacao', warningId: 'pmSubstitutoIdentificacaoWarning' },
+                { id: 'dateRangePicker', warningId: 'dateRangePickerWarning' }
+            ];
+
+            fieldsToValidate.forEach(field => {
+                if (!validateField(field.id, field.warningId)) isValid = false;
+            });
+            
+            if (!document.getElementById('noPagamentoCheckbox').checked) {
+                const paymentPickerInput = document.getElementById('paymentDateRangePicker');
+                const warning = document.getElementById('paymentDateRangePickerWarning');
+                
+                if (paymentPickerInput.value && flatpickr.getInstance(paymentPickerInput).selectedDates.length < 2) {
+                    showCustomAlert('Erro de Validação', 'Para o pagamento, por favor, selecione um intervalo de datas completo, clicando na data de início e depois na de fim.');
+                    paymentPickerInput.classList.add('input-error');
+                    warning.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    paymentPickerInput.classList.remove('input-error');
+                    warning.classList.add('hidden');
+                }
+            }
+            return isValid;
+        }
+
+        function printForm() {
+            if (!validateAllFields()) {
+                showCustomAlert('Atenção!', 'Por favor, preencha todos os campos obrigatórios corretamente.');
+                return;
+            }
+            window.print();
+        }
+        
+        function signWithGovBr() {
+            window.open('https://sso.acesso.gov.br/login?client_id=assinador.iti.br&authorization_id=198daa71163', '_blank');
+        }
+    </script>
+</body>
+</html>
