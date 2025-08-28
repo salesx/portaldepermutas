@@ -389,49 +389,51 @@
                 diasServico = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
             }
             
-            const tipo24Horas = diasServico === 1 ? '☑' : '☐';
-            const tipo48Horas = diasServico === 2 ? '☑' : '☐';
-            const tipo72Horas = diasServico >= 3 ? '☑' : '☐';
+            const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
+            const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
+            const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
 
             const servicoPermutadoTexto = formatarDataRangeImpressao(dateRange);
             const pagamentoServicoTexto = !noPagamento && paymentDateRange ? formatarDataRangeImpressao(paymentDateRange) : '';
-            const pagamentoHtml = pagamentoServicoTexto ? `<p>Data do pagamento do serviço: ${pagamentoServicoTexto}</p>` : '';
+            const pagamentoHtml = pagamentoServicoTexto ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoServicoTexto}</p>` : '';
             
             const brasaoUrlPrint = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
 
             const printContent = `
-                <div style="font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt;">
-                    <div style="text-align: center;">
+                <div style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.15;">
+                    <div class="text-center" style="line-height: 1.15; margin: 0;">
                         <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
-                        <p style="font-weight: bold; margin: 2px 0;">ESTADO DO MARANHÃO</p>
-                        <p style="margin: 2px 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
-                        <p style="margin: 2px 0;">CPA/I-5 – 10º BPM</p>
-                        <p style="margin: 2px 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
-                        <p style="margin: 2px 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
-                        <p style="font-size: 9pt; margin: 2px 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
-                        <p style="font-weight: bold; margin-top: 2rem; margin-bottom: 1rem;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+                        <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
+                        <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA DE SEGURANÇA</p>
+                        <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
+                        <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+                        <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+                        <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+                        <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
                     </div>
-                    <p>SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
-                    <div style="margin-top: 1.5rem;">
-                        <p>PM SUBSTITUÍDO: ${pmSubstituidoNome} - ID: ${pmSubstituidoId}</p>
-                        <p style="margin-top: 3rem;">Assinatura:________________________________________</p>
+                    <div class="mt-4 mb-4">
+                        <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
                     </div>
-                    <div style="margin-top: 1.5rem;">
-                        <p>PM SUBSTITUTO: ${pmSubstitutoNome} - ID: ${pmSubstitutoId}</p>
-                        <p style="margin-top: 3rem;">Assinatura:________________________________________</p>
+                    <div style="margin-bottom: 0,25rem;">
+                        <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}</p>
+                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
                     </div>
-                    <div style="margin-top: 1.5rem;">
-                        <p>Data do serviço permutado: ${servicoPermutadoTexto}</p>
+                    <div style="margin-bottom: 0,25rem;">
+                        <p class="text-base">PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}</p>
+                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-base">Data do serviço permutado: ${servicoPermutadoTexto}</p>
                         ${pagamentoHtml}
                     </div>
-                    <div style="margin-top: 1rem;">
-                        <p>${tipo24Horas} 24 Horas &nbsp;&nbsp; ${tipo48Horas} 48 Horas &nbsp;&nbsp; ${tipo72Horas} 72 Horas</p>
+                    <div class="mb-4" style="text-align: left; margin-left: 20px;">
+                        <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
                     </div>
-                    <div style="text-align: center; margin-top: 2.5rem;">
-                        <p>AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim ( &nbsp; ) Não</p>
-                        <p style="margin-top: 3rem;">_____________________________________________________</p>
-                        <p style="font-weight: bold;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
-                        <p>COMANDANTE DA 2°CP/10°BPM</p>
+                    <div class="text-center" style="margin-top: 2rem;">
+                        <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: (  ) Sim  (  ) Não</p>
+                        <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
+                        <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
+                        <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
                     </div>
                 </div>`;
             
