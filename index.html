@@ -33,43 +33,13 @@
 
         /* Estilos para a impressão (Solução para Celular) */
         @media print {
-            /* Esconde tudo que não deve aparecer na impressão */
-            .no-print {
+            /* Esconde tudo na página, exceto o container de impressão */
+            body > *:not(#print-content-container) {
                 display: none !important;
             }
-            /* Garante que o corpo da página não tenha fundo ou margens extras */
-            body {
-                background-color: white !important;
-                margin: 0;
-                padding: 0;
-            }
-            /* Remove estilos visuais desnecessários do formulário na impressão */
-            .printable-form {
-                box-shadow: none !important;
-                border: none !important;
-                margin: 0 !important;
-                padding: 1cm !important; /* Adiciona uma margem para impressão */
-                width: 100% !important;
-                max-width: 100% !important;
-                border-radius: 0 !important;
-            }
-            /* Esconde o cabeçalho visual e mostra o de impressão */
-            #print-header {
+            /* Mostra e formata o container de impressão */
+            #print-content-container {
                 display: block !important;
-            }
-            /* Formata os campos para parecerem mais com um documento */
-            input, select {
-                border: none !important;
-                border-bottom: 1px dotted #333 !important;
-                padding: 2px 0 !important;
-                background: transparent !important;
-                border-radius: 0 !important;
-            }
-            /* Garante que o texto do select selecionado apareça */
-            select {
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
             }
         }
     </style>
@@ -90,18 +60,6 @@
     <!-- Container Principal do Formulário -->
     <div class="printable-form bg-white rounded-xl shadow-lg p-6 sm:p-8 md:p-10 max-w-4xl mx-auto">
         
-        <!-- Cabeçalho para Impressão (escondido na tela) -->
-        <div id="print-header" class="hidden text-center" style="font-family: 'Times New Roman', Times, serif; line-height: 1.15; font-size: 12pt;">
-            <img src="https://i.ibb.co/Xr6X43nG/BRAS-O.png" alt="Brasão" style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
-            <p style="font-weight: bold; margin: 2px 0;">ESTADO DO MARANHÃO</p>
-            <p style="margin: 2px 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
-            <p style="margin: 2px 0;">CPA/I-5 – 10º BPM</p>
-            <p style="margin: 2px 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
-            <p style="margin: 2px 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
-            <p style="font-size: 9pt; margin: 2px 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
-            <p style="font-weight: bold; margin-top: 2rem; margin-bottom: 1rem;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
-        </div>
-
         <!-- Cabeçalho para Tela -->
         <header class="text-center mb-8 no-print">
             <img src="https://i.ibb.co/Xr6X43nG/BRAS-O.png" alt="Brasão da Polícia Militar" class="mx-auto h-20 w-auto mb-4">
@@ -201,6 +159,9 @@
             </button>
         </div>
     </div>
+
+    <!-- Container para o conteúdo de impressão -->
+    <div id="print-content-container" class="hidden"></div>
 
     <script>
         // Garante que o script rode apenas depois que o HTML for completamente carregado
@@ -357,7 +318,8 @@
                 const paymentPickerInput = document.getElementById('paymentDateRangePicker');
                 const warning = document.getElementById('paymentDateRangePickerWarning');
                 
-                if (paymentPickerInput.value && flatpickr.getInstance(paymentPickerInput).selectedDates.length < 2) {
+                // CORREÇÃO: Acessa a instância do flatpickr através da propriedade _flatpickr do elemento
+                if (paymentPickerInput.value && paymentPickerInput._flatpickr && paymentPickerInput._flatpickr.selectedDates.length < 2) {
                     showCustomAlert('Erro de Validação', 'Para o pagamento, por favor, selecione um intervalo de datas completo, clicando na data de início e depois na de fim.');
                     paymentPickerInput.classList.add('input-error');
                     warning.classList.remove('hidden');
@@ -370,11 +332,132 @@
             return isValid;
         }
 
+        function formatarDataRangeImpressao(dateStrPt) {
+            if (!dateStrPt || typeof dateStrPt !== 'string') return '';
+
+            const parseDate = (dStr) => {
+                const parts = dStr.trim().split('/');
+                if (parts.length !== 3) return null;
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // Mês é 0-indexado
+                const year = parseInt(parts[2], 10);
+                if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+                return new Date(year, month, day);
+            };
+
+            const dateParts = dateStrPt.split(' a ');
+            const startDate = parseDate(dateParts[0]);
+            
+            if (!startDate) return '';
+
+            const endDate = dateParts.length > 1 ? parseDate(dateParts[1]) : startDate;
+
+            if (!endDate) return '';
+
+            let allDates = [];
+            let currentDate = new Date(startDate.getTime());
+            
+            while (currentDate <= endDate) {
+                allDates.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            if (allDates.length === 0) {
+                return '';
+            }
+
+            if (allDates.length === 1) {
+                return allDates[0].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+
+            const firstDate = allDates[0];
+            const days = allDates.map(d => d.getDate().toString().padStart(2, '0')).join(' e ');
+            const month = (firstDate.getMonth() + 1).toString().padStart(2, '0');
+            const year = firstDate.getFullYear();
+            
+            return `${days}/${month}/${year}`;
+        }
+
         function printForm() {
             if (!validateAllFields()) {
                 showCustomAlert('Atenção!', 'Por favor, preencha todos os campos obrigatórios corretamente.');
                 return;
             }
+            
+            const pmSubstituidoNome = document.getElementById('pmSubstituidoNome').value.toUpperCase();
+            const pmSubstituidoId = document.getElementById('pmSubstituidoIdentificacao').value;
+            const pmSubstitutoNome = document.getElementById('pmSubstitutoNome').value.toUpperCase();
+            const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
+            const dateRange = document.getElementById('dateRangePicker').value;
+            const paymentDateRange = document.getElementById('paymentDateRangePicker').value;
+            const noPagamento = document.getElementById('noPagamentoCheckbox').checked;
+
+            const localizacaoChecked = document.getElementById('localizacaoSelect').value;
+            const localizacaoSede = localizacaoChecked === 'SEDE' ? 'X' : '&nbsp;';
+            const localizacaoTurilandia = localizacaoChecked === 'DPM TURILÂNDIA' ? 'X' : '&nbsp;';
+            const localizacaoTuriacu = localizacaoChecked === 'DPM TURIAÇU' ? 'X' : '&nbsp;';
+            
+            const parseDateForCalc = (dStr) => {
+                const parts = dStr.trim().split('/');
+                if (parts.length !== 3) return null;
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            };
+
+            const dates = dateRange.split(' a ');
+            const startDate = parseDateForCalc(dates[0]);
+            const endDate = dates.length > 1 ? parseDateForCalc(dates[1]) : startDate;
+            let diasServico = 0;
+            if (startDate && endDate) {
+                diasServico = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            }
+            
+            const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
+            const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
+            const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
+
+            const servicoPermutadoTexto = formatarDataRangeImpressao(dateRange);
+            const pagamentoServicoTexto = !noPagamento && paymentDateRange ? formatarDataRangeImpressao(paymentDateRange) : '';
+            const pagamentoHtml = pagamentoServicoTexto ? `<p>Data do pagamento do serviço: ${pagamentoServicoTexto}</p>` : '';
+            
+            const brasaoUrlPrint = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
+
+            const printContent = `
+                <div style="font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt;">
+                    <div style="text-align: center;">
+                        <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
+                        <p style="font-weight: bold; margin: 2px 0;">ESTADO DO MARANHÃO</p>
+                        <p style="margin: 2px 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
+                        <p style="margin: 2px 0;">CPA/I-5 – 10º BPM</p>
+                        <p style="margin: 2px 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+                        <p style="margin: 2px 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+                        <p style="font-size: 9pt; margin: 2px 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+                        <p style="font-weight: bold; margin-top: 2rem; margin-bottom: 1rem;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+                    </div>
+                    <p>SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
+                    <div style="margin-top: 1.5rem;">
+                        <p>PM SUBSTITUÍDO: ${pmSubstituidoNome} - ID: ${pmSubstituidoId}</p>
+                        <p style="margin-top: 3rem;">Assinatura:________________________________________</p>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <p>PM SUBSTITUTO: ${pmSubstitutoNome} - ID: ${pmSubstitutoId}</p>
+                        <p style="margin-top: 3rem;">Assinatura:________________________________________</p>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <p>Data do serviço permutado: ${servicoPermutadoTexto}</p>
+                        ${pagamentoHtml}
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <p>( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 2.5rem;">
+                        <p>AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim ( &nbsp; ) Não</p>
+                        <p style="margin-top: 3rem;">_____________________________________________________</p>
+                        <p style="font-weight: bold;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
+                        <p>COMANDANTE DA 2°CP/10°BPM</p>
+                    </div>
+                </div>`;
+            
+            document.getElementById('print-content-container').innerHTML = printContent;
             window.print();
         }
         
