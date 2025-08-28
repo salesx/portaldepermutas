@@ -68,23 +68,12 @@
                 <p class="text-xs text-gray-400">10º Batalhão - 2ª Companhia</p>
             </div>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-6">Formulário de Permuta de Serviço</h2>
+            <p class="text-lg font-semibold text-gray-600 mt-2">TURIAÇU</p>
         </header>
-        
-        <!-- Seção de Localização -->
-        <fieldset class="mb-8">
-            <legend class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 w-full">1. Localização</legend>
-             <select id="localizacaoSelect" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md">
-                <option value="" disabled selected>-- Escolha uma localização --</option>
-                <option value="SEDE">SEDE</option>
-                <option value="DPM TURILÂNDIA">DPM TURILÂNDIA</option>
-                <option value="DPM TURIAÇU">DPM TURIAÇU</option>
-            </select>
-            <p id="localizacaoWarning" class="text-sm text-red-500 mt-2 hidden font-medium">Por favor, selecione uma localização.</p>
-        </fieldset>
         
         <!-- Seção de Identificação -->
         <fieldset class="mb-8">
-            <legend class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 w-full">2. Identificação</legend>
+            <legend class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 w-full">1. Identificação</legend>
             <!-- PM Substituído -->
             <div class="mb-6">
                 <h3 class="text-md font-bold text-gray-700 mb-3">PM SUBSTITUÍDO (Quem sai do serviço)</h3>
@@ -121,7 +110,7 @@
         
         <!-- Seção de Datas -->
         <fieldset>
-            <legend class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 w-full">3. Datas da Permuta</legend>
+            <legend class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 w-full">2. Datas da Permuta</legend>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
                 <!-- Data do Serviço Permutado -->
                 <div class="flex flex-col">
@@ -280,15 +269,6 @@
             setTimeout(() => alertContainer.classList.add('hidden'), 300);
         };
 
-        function validateLocalizacao() {
-            const field = document.getElementById('localizacaoSelect');
-            const warning = document.getElementById('localizacaoWarning');
-            const isValid = field.value.trim() !== '';
-            field.classList.toggle('input-error', !isValid);
-            warning.classList.toggle('hidden', isValid);
-            return isValid;
-        }
-
         function validateField(fieldId, warningId) {
             const field = document.getElementById(fieldId);
             const warning = document.getElementById(warningId);
@@ -300,7 +280,6 @@
 
         function validateAllFields() {
             let isValid = true;
-            isValid = validateLocalizacao() && isValid;
             
             const fieldsToValidate = [
                 { id: 'pmSubstituidoNome', warningId: 'pmSubstituidoNomeWarning' },
@@ -318,7 +297,6 @@
                 const paymentPickerInput = document.getElementById('paymentDateRangePicker');
                 const warning = document.getElementById('paymentDateRangePickerWarning');
                 
-                // CORREÇÃO: Acessa a instância do flatpickr através da propriedade _flatpickr do elemento
                 if (paymentPickerInput.value && paymentPickerInput._flatpickr && paymentPickerInput._flatpickr.selectedDates.length < 2) {
                     showCustomAlert('Erro de Validação', 'Para o pagamento, por favor, selecione um intervalo de datas completo, clicando na data de início e depois na de fim.');
                     paymentPickerInput.classList.add('input-error');
@@ -390,12 +368,13 @@
             const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
             const dateRange = document.getElementById('dateRangePicker').value;
             const paymentDateRange = document.getElementById('paymentDateRangePicker').value;
-            const noPagamento = document.getElementById('noPagamentoCheckbox').checked;
+            
+            // Lógica automática para "Não há pagamento"
+            const noPagamento = document.getElementById('noPagamentoCheckbox').checked || !paymentDateRange;
 
-            const localizacaoChecked = document.getElementById('localizacaoSelect').value;
-            const localizacaoSede = localizacaoChecked === 'SEDE' ? 'X' : '&nbsp;';
-            const localizacaoTurilandia = localizacaoChecked === 'DPM TURILÂNDIA' ? 'X' : '&nbsp;';
-            const localizacaoTuriacu = localizacaoChecked === 'DPM TURIAÇU' ? 'X' : '&nbsp;';
+            const localizacaoSede = '&nbsp;';
+            const localizacaoTurilandia = '&nbsp;';
+            const localizacaoTuriacu = 'X';
             
             const parseDateForCalc = (dStr) => {
                 const parts = dStr.trim().split('/');
@@ -411,9 +390,9 @@
                 diasServico = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             }
             
-            const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
-            const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
-            const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
+            const tipo24Horas = diasServico === 1 ? '☑' : '☐';
+            const tipo48Horas = diasServico === 2 ? '☑' : '☐';
+            const tipo72Horas = diasServico >= 3 ? '☑' : '☐';
 
             const servicoPermutadoTexto = formatarDataRangeImpressao(dateRange);
             const pagamentoServicoTexto = !noPagamento && paymentDateRange ? formatarDataRangeImpressao(paymentDateRange) : '';
@@ -447,7 +426,7 @@
                         ${pagamentoHtml}
                     </div>
                     <div style="margin-top: 1rem;">
-                        <p>( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
+                        <p>${tipo24Horas} 24 Horas &nbsp;&nbsp; ${tipo48Horas} 48 Horas &nbsp;&nbsp; ${tipo72Horas} 72 Horas</p>
                     </div>
                     <div style="text-align: center; margin-top: 2.5rem;">
                         <p>AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim ( &nbsp; ) Não</p>
