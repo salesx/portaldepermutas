@@ -386,7 +386,6 @@
             const endDate = dates.length > 1 ? parseDateForCalc(dates[1]) : startDate;
             let diasServico = 0;
             if (startDate && endDate) {
-                // Adiciona getTime() para garantir que a subtração funcione corretamente
                 diasServico = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
             }
             
