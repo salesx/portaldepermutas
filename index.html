@@ -84,12 +84,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div>
                         <label for="pmSubstituidoNome" class="text-sm font-medium text-gray-600 block mb-1">Nome:</label>
-                        <input type="text" id="pmSubstituidoNome" placeholder="Ex: SD PM 001/22 FULANO" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md" list="pmList">
+                        <select id="pmSubstituidoNome" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md"></select>
                         <p id="pmSubstituidoNomeWarning" class="text-xs text-red-500 mt-1 hidden">Campo obrigatório.</p>
                     </div>
                     <div>
                         <label for="pmSubstituidoIdentificacao" class="text-sm font-medium text-gray-600 block mb-1">ID (Matrícula):</label>
-                        <input type="tel" id="pmSubstituidoIdentificacao" placeholder="Ex: 012345" pattern="\d*" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md">
+                        <input type="tel" id="pmSubstituidoIdentificacao" placeholder="Digite o ID" pattern="\d*" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md">
                         <p id="pmSubstituidoIdentificacaoWarning" class="text-xs text-red-500 mt-1 hidden">Campo obrigatório.</p>
                     </div>
                 </div>
@@ -100,20 +100,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div>
                         <label for="pmSubstitutoNome" class="text-sm font-medium text-gray-600 block mb-1">Nome:</label>
-                        <input type="text" id="pmSubstitutoNome" placeholder="Ex: SD PM 001/22 CICLANO" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md" list="pmList">
+                        <select id="pmSubstitutoNome" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md"></select>
                         <p id="pmSubstitutoNomeWarning" class="text-xs text-red-500 mt-1 hidden">Campo obrigatório.</p>
                     </div>
                     <div>
                         <label for="pmSubstitutoIdentificacao" class="text-sm font-medium text-gray-600 block mb-1">ID (Matrícula):</label>
-                        <input type="tel" id="pmSubstitutoIdentificacao" placeholder="Ex: 543210" pattern="\d*" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md">
+                        <input type="tel" id="pmSubstitutoIdentificacao" placeholder="Digite o ID" pattern="\d*" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md">
                         <p id="pmSubstitutoIdentificacaoWarning" class="text-xs text-red-500 mt-1 hidden">Campo obrigatório.</p>
                     </div>
                 </div>
             </div>
         </fieldset>
         
-        <datalist id="pmList"></datalist>
-
         <!-- Seção de Datas -->
         <fieldset>
             <legend class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 w-full">3. Datas da Permuta</legend>
@@ -150,7 +148,7 @@
                 Gerar e Imprimir
             </button>
             <button onclick="signWithGovBr()" class="w-full md:w-auto bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                Ir para GOV.BR
+                ir para GOV.BR
             </button>
         </div>
     </div>
@@ -227,26 +225,48 @@
             "SD PM 572/22 Theodosio": "871896", "Sd Pm 457/24 Eduardo Silva": "869987"
         };
         
-        // Autocomplete do ID
-        function setupAutocomplete(nameInput, idInput) {
-            nameInput.addEventListener('input', (event) => {
-                idInput.value = pmData[event.target.value] || '';
+        // Popula as listas suspensas de nomes
+        function populateNameDropdowns() {
+            const substituidoSelect = document.getElementById('pmSubstituidoNome');
+            const substitutoSelect = document.getElementById('pmSubstitutoNome');
+            const selects = [substituidoSelect, substitutoSelect];
+
+            selects.forEach(select => {
+                select.innerHTML = ''; // Limpa opções existentes
+
+                // Adiciona a opção padrão
+                const defaultOption = document.createElement('option');
+                defaultOption.value = "";
+                defaultOption.textContent = "-- Selecione um nome --";
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                select.appendChild(defaultOption);
+
+                // Adiciona os nomes do objeto pmData
+                for (const name in pmData) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                }
             });
         }
-        setupAutocomplete(document.getElementById('pmSubstituidoNome'), document.getElementById('pmSubstituidoIdentificacao'));
-        setupAutocomplete(document.getElementById('pmSubstitutoNome'), document.getElementById('pmSubstitutoIdentificacao'));
-
-        // Atualiza datalist
-        function updatePmList() {
-            const pmList = document.getElementById('pmList');
-            pmList.innerHTML = '';
-            for (const name in pmData) {
-                const option = document.createElement('option');
-                option.value = name;
-                pmList.appendChild(option);
-            }
+        
+        // Preenchimento automático do ID ao selecionar um nome
+        function setupNameSelection(nameSelect, idInput) {
+            nameSelect.addEventListener('change', (event) => {
+                const selectedName = event.target.value;
+                idInput.value = pmData[selectedName] || '';
+                validateField(nameSelect.id, nameSelect.id + 'Warning');
+                validateField(idInput.id, idInput.id + 'Warning');
+            });
         }
-        updatePmList();
+        
+        // Inicializa as funções
+        populateNameDropdowns();
+        setupNameSelection(document.getElementById('pmSubstituidoNome'), document.getElementById('pmSubstituidoIdentificacao'));
+        setupNameSelection(document.getElementById('pmSubstitutoNome'), document.getElementById('pmSubstitutoIdentificacao'));
+
 
         // Funções de Validação
         function validateLocalizacao() {
@@ -302,21 +322,31 @@
 
         // Formatação de datas para impressão
         function formatarDataRangeImpressao(dateStrPt) {
-            if (!dateStrPt) return '';
-            const dates = dateStrPt.split(' a ');
-            const parseDate = (dStr) => new Date(dStr.split('/').reverse().join('-') + 'T00:00:00');
-            
-            const startDate = parseDate(dates[0]);
-            const endDate = dates.length > 1 ? parseDate(dates[1]) : startDate;
+            if (!dateStrPt || typeof dateStrPt !== 'string') return '';
 
-            // CORREÇÃO APLICADA AQUI: Verifica se a data de início é válida
-            if (isNaN(startDate.getTime())) {
-                return '';
-            }
+            const parseDate = (dStr) => {
+                const parts = dStr.trim().split('/');
+                if (parts.length !== 3) return null;
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // Mês é 0-indexado
+                const year = parseInt(parts[2], 10);
+                if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+                return new Date(year, month, day);
+            };
+
+            const dateParts = dateStrPt.split(' a ');
+            const startDate = parseDate(dateParts[0]);
+            
+            if (!startDate) return '';
+
+            const endDate = dateParts.length > 1 ? parseDate(dateParts[1]) : startDate;
+
+            if (!endDate) return '';
 
             let allDates = [];
-            let currentDate = new Date(startDate);
-            while(currentDate <= endDate) {
+            let currentDate = new Date(startDate.getTime());
+            
+            while (currentDate <= endDate) {
                 allDates.push(new Date(currentDate));
                 currentDate.setDate(currentDate.getDate() + 1);
             }
@@ -326,12 +356,14 @@
             }
 
             if (allDates.length === 1) {
-                return allDates[0].toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'});
+                return allDates[0].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
             }
 
+            const firstDate = allDates[0];
             const days = allDates.map(d => d.getDate().toString().padStart(2, '0')).join(' e ');
-            const month = (allDates[0].getMonth() + 1).toString().padStart(2, '0');
-            const year = allDates[0].getFullYear();
+            const month = (firstDate.getMonth() + 1).toString().padStart(2, '0');
+            const year = firstDate.getFullYear();
+            
             return `${days}/${month}/${year}`;
         }
 
@@ -355,8 +387,20 @@
             const localizacaoTurilandia = localizacaoChecked === 'DPM TURILÂNDIA' ? 'X' : '&nbsp;';
             const localizacaoTuriacu = localizacaoChecked === 'DPM TURIAÇU' ? 'X' : '&nbsp;';
             
+            const parseDateForCalc = (dStr) => {
+                const parts = dStr.trim().split('/');
+                if (parts.length !== 3) return null;
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            };
+
             const dates = dateRange.split(' a ');
-            const diasServico = dates.length > 1 ? Math.ceil((new Date(dates[1].split('/').reverse().join('-')) - new Date(dates[0].split('/').reverse().join('-'))) / (1000 * 60 * 60 * 24)) + 1 : 1;
+            const startDate = parseDateForCalc(dates[0]);
+            const endDate = dates.length > 1 ? parseDateForCalc(dates[1]) : startDate;
+            let diasServico = 0;
+            if (startDate && endDate) {
+                diasServico = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            }
+            
             const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
             const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
             const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
