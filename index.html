@@ -20,12 +20,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f0f2f5;
         }
-        /* Estilos para a impressão */
-        @media print {
-            body { background-color: white; margin: 0; padding: 0; }
-            .no-print { display: none; }
-            .printable-form { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
-        }
+        
         /* Estilo para erro de validação */
         .input-error {
             border-color: #ef4444 !important;
@@ -34,6 +29,48 @@
         /* Animação para o alerta */
         #custom-alert {
             transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Estilos para a impressão (Solução para Celular) */
+        @media print {
+            /* Esconde tudo que não deve aparecer na impressão */
+            .no-print {
+                display: none !important;
+            }
+            /* Garante que o corpo da página não tenha fundo ou margens extras */
+            body {
+                background-color: white !important;
+                margin: 0;
+                padding: 0;
+            }
+            /* Remove estilos visuais desnecessários do formulário na impressão */
+            .printable-form {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 1cm !important; /* Adiciona uma margem para impressão */
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+            }
+            /* Esconde o cabeçalho visual e mostra o de impressão */
+            #print-header {
+                display: block !important;
+            }
+            /* Formata os campos para parecerem mais com um documento */
+            input, select {
+                border: none !important;
+                border-bottom: 1px dotted #333 !important;
+                padding: 2px 0 !important;
+                background: transparent !important;
+                border-radius: 0 !important;
+            }
+            /* Garante que o texto do select selecionado apareça */
+            select {
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+            }
         }
     </style>
 </head>
@@ -53,10 +90,22 @@
     <!-- Container Principal do Formulário -->
     <div class="printable-form bg-white rounded-xl shadow-lg p-6 sm:p-8 md:p-10 max-w-4xl mx-auto">
         
-        <!-- Cabeçalho -->
-        <header class="text-center mb-8">
-            <img src="https://i.ibb.co/Xr6X43nG/BRAS-O.png" alt="Brasão da Polícia Militar" class="mx-auto h-20 w-auto mb-4 no-print">
-            <div class="no-print">
+        <!-- Cabeçalho para Impressão (escondido na tela) -->
+        <div id="print-header" class="hidden text-center" style="font-family: 'Times New Roman', Times, serif; line-height: 1.15; font-size: 12pt;">
+            <img src="https://i.ibb.co/Xr6X43nG/BRAS-O.png" alt="Brasão" style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
+            <p style="font-weight: bold; margin: 2px 0;">ESTADO DO MARANHÃO</p>
+            <p style="margin: 2px 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
+            <p style="margin: 2px 0;">CPA/I-5 – 10º BPM</p>
+            <p style="margin: 2px 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+            <p style="margin: 2px 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+            <p style="font-size: 9pt; margin: 2px 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+            <p style="font-weight: bold; margin-top: 2rem; margin-bottom: 1rem;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+        </div>
+
+        <!-- Cabeçalho para Tela -->
+        <header class="text-center mb-8 no-print">
+            <img src="https://i.ibb.co/Xr6X43nG/BRAS-O.png" alt="Brasão da Polícia Militar" class="mx-auto h-20 w-auto mb-4">
+            <div>
                 <h1 class="text-sm font-bold tracking-wider text-gray-500 uppercase">Polícia Militar do Maranhão</h1>
                 <p class="text-xs text-gray-400">10º Batalhão - 2ª Companhia</p>
             </div>
@@ -135,334 +184,4 @@
                     <p class="text-xs text-gray-500 mb-3">Se houver, selecione o período no calendário.</p>
                     <div id="pagamentoServicoFields" class="transition-opacity duration-300">
                          <input type="text" id="paymentDateRangePicker" placeholder="Clique para selecionar as datas de pagamento" class="w-full p-3 border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 rounded-md cursor-pointer">
-                         <p id="paymentDateRangePickerWarning" class="text-xs text-red-500 mt-1 hidden">A seleção de um período (início e fim) é obrigatória.</p>
-                    </div>
-                </div>
-            </div>
-        </fieldset>
-        
-        <!-- Botões de Ação -->
-        <div class="no-print flex flex-col md:flex-row justify-center items-center gap-4 mt-10 pt-6 border-t">
-            <button onclick="printForm()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
-                Gerar e Imprimir
-            </button>
-            <button onclick="signWithGovBr()" class="w-full md:w-auto bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                ir para GOV.BR
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // Configuração do Flatpickr
-        flatpickr.localize(flatpickr.l10ns.pt);
-        
-        // Calendário para Serviço Permutado
-        const datePicker = flatpickr("#dateRangePicker", {
-            mode: "range",
-            dateFormat: "d/m/Y",
-            onChange: function(selectedDates, dateStr, instance) {
-                if (selectedDates.length === 2) {
-                    const [start, end] = selectedDates;
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays > 2) {
-                        showCustomAlert('Limite Excedido', 'Você só pode selecionar um intervalo de até 3 dias consecutivos.');
-                        instance.clear();
-                    }
-                }
-                validateField('dateRangePicker', 'dateRangePickerWarning');
-            }
-        });
-
-        // Calendário para Pagamento do Serviço
-        const paymentDatePicker = flatpickr("#paymentDateRangePicker", {
-            mode: "range",
-            dateFormat: "d/m/Y"
-        });
-
-        // Alerta customizado
-        function showCustomAlert(title, message) {
-            const alertContainer = document.getElementById('custom-alert');
-            const alertBox = document.getElementById('alert-box');
-            document.getElementById('alert-title').textContent = title;
-            document.getElementById('alert-message').textContent = message;
-            alertContainer.classList.remove('hidden');
-            setTimeout(() => {
-                alertContainer.style.opacity = '1';
-                alertBox.classList.remove('scale-95', 'opacity-0');
-            }, 10);
-        }
-
-        window.closeCustomAlert = function() {
-            const alertContainer = document.getElementById('custom-alert');
-            alertContainer.style.opacity = '0';
-            document.getElementById('alert-box').classList.add('scale-95', 'opacity-0');
-            setTimeout(() => alertContainer.classList.add('hidden'), 300);
-        };
-        
-        // Lógica do checkbox "Não há pagamento"
-        const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox');
-        noPagamentoCheckbox.addEventListener('change', function() {
-            const fields = document.getElementById('pagamentoServicoFields');
-            const pickerInput = document.getElementById('paymentDateRangePicker');
-            const warning = document.getElementById('paymentDateRangePickerWarning');
-
-            if (this.checked) {
-                fields.classList.add('opacity-50', 'pointer-events-none');
-                paymentDatePicker.clear();
-                pickerInput.classList.remove('input-error');
-                warning.classList.add('hidden');
-            } else {
-                fields.classList.remove('opacity-50', 'pointer-events-none');
-            }
-        });
-
-        // Dados dos PMs
-        const pmData = {
-            "Cb Pm 626/14 Coriolano": "N/A", "Sd Pm 473/16 André": "849351", "Sd Pm 408/18 Ribeiro": "N/A",
-            "Sd Pm 424/18 Rodrigues": "N/A", "Sd Pm 885/18 Albert": "N/A", "Sd Pm 502/22 Sales": "869293",
-            "SD PM 572/22 Theodosio": "871896", "Sd Pm 457/24 Eduardo Silva": "869987"
-        };
-        
-        // Popula as listas suspensas de nomes
-        function populateNameDropdowns() {
-            const substituidoSelect = document.getElementById('pmSubstituidoNome');
-            const substitutoSelect = document.getElementById('pmSubstitutoNome');
-            const selects = [substituidoSelect, substitutoSelect];
-
-            selects.forEach(select => {
-                select.innerHTML = ''; // Limpa opções existentes
-
-                // Adiciona a opção padrão
-                const defaultOption = document.createElement('option');
-                defaultOption.value = "";
-                defaultOption.textContent = "-- Selecione um nome --";
-                defaultOption.disabled = true;
-                defaultOption.selected = true;
-                select.appendChild(defaultOption);
-
-                // Adiciona os nomes do objeto pmData
-                for (const name in pmData) {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    select.appendChild(option);
-                }
-            });
-        }
-        
-        // Preenchimento automático do ID ao selecionar um nome
-        function setupNameSelection(nameSelect, idInput) {
-            nameSelect.addEventListener('change', (event) => {
-                const selectedName = event.target.value;
-                idInput.value = pmData[selectedName] || '';
-                validateField(nameSelect.id, nameSelect.id + 'Warning');
-                validateField(idInput.id, idInput.id + 'Warning');
-            });
-        }
-        
-        // Inicializa as funções
-        populateNameDropdowns();
-        setupNameSelection(document.getElementById('pmSubstituidoNome'), document.getElementById('pmSubstituidoIdentificacao'));
-        setupNameSelection(document.getElementById('pmSubstitutoNome'), document.getElementById('pmSubstitutoIdentificacao'));
-
-
-        // Funções de Validação
-        function validateLocalizacao() {
-            const field = document.getElementById('localizacaoSelect');
-            const warning = document.getElementById('localizacaoWarning');
-            const isValid = field.value.trim() !== '';
-            field.classList.toggle('input-error', !isValid);
-            warning.classList.toggle('hidden', isValid);
-            return isValid;
-        }
-
-        function validateField(fieldId, warningId) {
-            const field = document.getElementById(fieldId);
-            const warning = document.getElementById(warningId);
-            const isValid = field.value.trim() !== '';
-            field.classList.toggle('input-error', !isValid);
-            warning.classList.toggle('hidden', isValid);
-            return isValid;
-        }
-
-        function validateAllFields() {
-            let isValid = true;
-            isValid = validateLocalizacao() && isValid;
-            
-            const fieldsToValidate = [
-                { id: 'pmSubstituidoNome', warningId: 'pmSubstituidoNomeWarning' },
-                { id: 'pmSubstituidoIdentificacao', warningId: 'pmSubstituidoIdentificacaoWarning' },
-                { id: 'pmSubstitutoNome', warningId: 'pmSubstitutoNomeWarning' },
-                { id: 'pmSubstitutoIdentificacao', warningId: 'pmSubstitutoIdentificacaoWarning' },
-                { id: 'dateRangePicker', warningId: 'dateRangePickerWarning' }
-            ];
-
-            fieldsToValidate.forEach(field => {
-                if (!validateField(field.id, field.warningId)) isValid = false;
-            });
-            
-            if (!noPagamentoCheckbox.checked) {
-                const paymentPickerInput = document.getElementById('paymentDateRangePicker');
-                const warning = document.getElementById('paymentDateRangePickerWarning');
-                
-                if (paymentPickerInput.value && paymentDatePicker.selectedDates.length < 2) {
-                    showCustomAlert('Erro de Validação', 'Para o pagamento, por favor, selecione um intervalo de datas completo, clicando na data de início e depois na de fim.');
-                    paymentPickerInput.classList.add('input-error');
-                    warning.classList.remove('hidden');
-                    isValid = false;
-                } else {
-                    paymentPickerInput.classList.remove('input-error');
-                    warning.classList.add('hidden');
-                }
-            }
-            return isValid;
-        }
-
-        // Formatação de datas para impressão
-        function formatarDataRangeImpressao(dateStrPt) {
-            if (!dateStrPt || typeof dateStrPt !== 'string') return '';
-
-            const parseDate = (dStr) => {
-                const parts = dStr.trim().split('/');
-                if (parts.length !== 3) return null;
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10) - 1; // Mês é 0-indexado
-                const year = parseInt(parts[2], 10);
-                if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-                return new Date(year, month, day);
-            };
-
-            const dateParts = dateStrPt.split(' a ');
-            const startDate = parseDate(dateParts[0]);
-            
-            if (!startDate) return '';
-
-            const endDate = dateParts.length > 1 ? parseDate(dateParts[1]) : startDate;
-
-            if (!endDate) return '';
-
-            let allDates = [];
-            let currentDate = new Date(startDate.getTime());
-            
-            while (currentDate <= endDate) {
-                allDates.push(new Date(currentDate));
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-
-            if (allDates.length === 0) {
-                return '';
-            }
-
-            if (allDates.length === 1) {
-                return allDates[0].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            }
-
-            const firstDate = allDates[0];
-            const days = allDates.map(d => d.getDate().toString().padStart(2, '0')).join(' e ');
-            const month = (firstDate.getMonth() + 1).toString().padStart(2, '0');
-            const year = firstDate.getFullYear();
-            
-            return `${days}/${month}/${year}`;
-        }
-
-        // Função para imprimir o formulário (com layout original)
-        function printForm() {
-            if (!validateAllFields()) {
-                showCustomAlert('Atenção!', 'Por favor, preencha todos os campos obrigatórios corretamente.');
-                return;
-            }
-            
-            const pmSubstituidoNome = document.getElementById('pmSubstituidoNome').value.toUpperCase();
-            const pmSubstituidoId = document.getElementById('pmSubstituidoIdentificacao').value;
-            const pmSubstitutoNome = document.getElementById('pmSubstitutoNome').value.toUpperCase();
-            const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
-            const dateRange = document.getElementById('dateRangePicker').value;
-            const paymentDateRange = document.getElementById('paymentDateRangePicker').value;
-            const noPagamento = noPagamentoCheckbox.checked;
-
-            const localizacaoChecked = document.getElementById('localizacaoSelect').value;
-            const localizacaoSede = localizacaoChecked === 'SEDE' ? 'X' : '&nbsp;';
-            const localizacaoTurilandia = localizacaoChecked === 'DPM TURILÂNDIA' ? 'X' : '&nbsp;';
-            const localizacaoTuriacu = localizacaoChecked === 'DPM TURIAÇU' ? 'X' : '&nbsp;';
-            
-            const parseDateForCalc = (dStr) => {
-                const parts = dStr.trim().split('/');
-                if (parts.length !== 3) return null;
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            };
-
-            const dates = dateRange.split(' a ');
-            const startDate = parseDateForCalc(dates[0]);
-            const endDate = dates.length > 1 ? parseDateForCalc(dates[1]) : startDate;
-            let diasServico = 0;
-            if (startDate && endDate) {
-                diasServico = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            }
-            
-            const tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
-            const tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
-            const tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
-
-            const servicoPermutadoTexto = formatarDataRangeImpressao(dateRange);
-            const pagamentoServicoTexto = !noPagamento && paymentDateRange ? formatarDataRangeImpressao(paymentDateRange) : '';
-            const pagamentoHtml = pagamentoServicoTexto ? `<p>Data do pagamento do serviço: ${pagamentoServicoTexto}</p>` : '';
-            
-            const brasaoUrlPrint = 'https://i.ibb.co/Xr6X43nG/BRAS-O.png';
-
-            const printContent = `
-                <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Impressão</title>
-                <style>
-                    body { font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt; }
-                    .text-center { text-align: center; } .font-bold { font-weight: bold; } p { margin: 2px 0; }
-                </style></head><body>
-                <div class="text-center">
-                    <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 100px; height: 120px; display: block; margin: 0 auto 5px;">
-                    <p class="font-bold">ESTADO DO MARANHÃO</p>
-                    <p>SECRETARIA DE SEGURANÇA PÚBLICA</p>
-                    <p>CPA/I-5 – 10º BPM</p>
-                    <p>10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
-                    <p>2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
-                    <p style="font-size: 9pt;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
-                    <p class="font-bold" style="margin-top: 2rem; margin-bottom: 1rem;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
-                </div>
-                <p>SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
-                <div style="margin-top: 1.5rem;">
-                    <p>PM SUBSTITUÍDO: ${pmSubstituidoNome} - ID: ${pmSubstituidoId}</p>
-                    <p style="margin-top: 3rem;">Assinatura:________________________________________</p>
-                </div>
-                <div style="margin-top: 1.5rem;">
-                    <p>PM SUBSTITUTO: ${pmSubstitutoNome} - ID: ${pmSubstitutoId}</p>
-                    <p style="margin-top: 3rem;">Assinatura:________________________________________</p>
-                </div>
-                <div style="margin-top: 1.5rem;">
-                    <p>Data do serviço permutado: ${servicoPermutadoTexto}</p>
-                    ${pagamentoHtml}
-                </div>
-                <div style="margin-top: 1rem;">
-                    <p>( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
-                </div>
-                <div class="text-center" style="margin-top: 2.5rem;">
-                    <p>AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim ( &nbsp; ) Não</p>
-                    <p style="margin-top: 3rem;">_____________________________________________________</p>
-                    <p class="font-bold">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
-                    <p>COMANDANTE DA 2°CP/10°BPM</p>
-                </div></body></html>`;
-
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(printContent);
-                printWindow.document.close();
-                printWindow.onload = () => { printWindow.print(); printWindow.close(); };
-            } else {
-                showCustomAlert('Erro de Pop-up', 'Por favor, habilite pop-ups para imprimir.');
-            }
-        }
-        
-        function signWithGovBr() {
-            window.open('https://sso.acesso.gov.br/login?client_id=assinador.iti.br&authorization_id=198daa71163', '_blank');
-        }
-    </script>
-</body>
-</html>
+                         <p
