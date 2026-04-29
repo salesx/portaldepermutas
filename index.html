@@ -1,520 +1,680 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulário de Permuta de Serviço Oficial</title>
-    <!-- Inclui o Tailwind CSS para estilização moderna e responsiva -->
+    <!-- Bibliotecas Externas Estáveis -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inclui a biblioteca de ícones Lucide para uma interface mais visual -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #483D8B; /* Um cinza mais suave para o fundo */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #483D8B; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .calendar-day-btn {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
         }
-        /* Estilos para a impressão e geração de PDF */
         @media print {
-            body { background-color: white; margin: 0; padding: 0; }
-            .no-print { display: none; }
-            .printable-form { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
-            input[type="text"], input[type="date"], input[type="tel"] { border: none !important; border-bottom: 1px solid #ccc !important; padding: 2px 0 !important; -color: white !important; }
+            .no-print { display: none !important; }
         }
-        .input-error { border-color: #ef4444 !important; --tw-ring-color: #ef4444 !important; }
-        .shadow-3d { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
-
-        /* Estilos para o Calendário Interativo */
-        .calendar-day { transition: all 0.2s ease-in-out; }
-        .calendar-day:not(.disabled):hover { background-color: #dbeafe; color: #1d4ed8; }
-        .day-selected { background-color: #2563eb !important; color: white !important; font-weight: bold; }
-        .day-in-range { background-color: #93c5fd; color: #1e40af; }
-        .day-disabled { color: #9ca3af; cursor: not-allowed; }
+        /* Scrollbar customizada para o painel admin */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="p-4 sm:p-6 md:p-8">
+<body>
+    <div id="root"></div>
 
-    <!-- Alerta Customizado -->
-    <div id="custom-alert" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-[9999] p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-md w-full text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2" id="alert-title"></h3>
-            <p class="text-gray-600 mb-6" id="alert-message"></p>
-            <button onclick="closeCustomAlert()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300">OK</button>
-        </div>
-    </div>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, addDoc, deleteDoc, updateDoc, query } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-    <!-- Container Principal do Formulário -->
-    <div class="printable-form bg-white rounded-2xl shadow-3d p-6 md:p-10 max-w-5xl mx-auto">
-        
-        <!-- Cabeçalho -->
-        <header class="text-center mb-10">
-            <img src="https://pm.ssp.ma.gov.br/wp-content/uploads/2023/05/BRASAO-SD-RAYOL-e1683655730963.png" alt="Brasão da Polícia Militar do Maranhão" class="w-20 h-auto mx-auto mb-4 no-print">
-            <div class="border-b-2 border-gray-200 py-4">
-                <h1 class="text-lg font-bold tracking-wide text-gray-700">ESTADO DO MARANHÃO</h1>
-                <p class="text-sm text-gray-500">SECRETARIA DE SEGURANÇA PÚBLICA</p>
-                <p class="text-sm text-gray-500">10º BATALHÃO DA POLÍCIA MILITAR - 2ª CIA</p>
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mt-8">Formulário de Permuta de Serviço</h2>
-            <!-- JANELA DE SELEÇÃO DE LOCALIZAÇÃO -->
-            <div class="flex justify-center -mt-1 mb-8">
-                <select id="localizacaoSelect" class="w-full max-w-xs p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg text-center text-lg font-semibold text-gray-600">
-                    <option value="TURIAÇU">TURIAÇU</option>
-                    <option value="SEDE">SEDE</option>
-                    <option value="TURILÂNDIA">TURILÂNDIA</option>
-                </select>
-            </div>
-        </header>
-
-        <!-- Seção de Identificação dos Policiais -->
-        <div class="grid md:grid-cols-2 gap-8 mb-8">
-            <!-- Card PM Substituído -->
-            <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
-                <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">1. PM Substituído</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label for="pmSubstituidoNome" class="text-sm font-medium text-gray-600 block mb-1">Nome:</label>
-                        <select id="pmSubstituidoNome" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
-                            <option value="" disabled selected>Selecione um PM</option>
-                        </select>
-                        <p id="pmSubstituidoNomeWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
-                    </div>
-                    <div>
-                        <label for="pmSubstituidoIdentificacao" class="text-sm font-medium text-gray-600 block mb-1">ID:</label>
-                        <input type="tel" id="pmSubstituidoIdentificacao" placeholder="ID será preenchido ou pode ser digitado" pattern="\d*" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
-                        <p id="pmSubstituidoIdentificacaoWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Card PM Substituto -->
-            <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
-                <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">2. PM Substituto</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label for="pmSubstitutoNome" class="text-sm font-medium text-gray-600 block mb-1">Nome:</label>
-                        <select id="pmSubstitutoNome" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
-                            <option value="" disabled selected>Selecione um PM</option>
-                        </select>
-                        <p id="pmSubstitutoNomeWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
-                    </div>
-                    <div>
-                        <label for="pmSubstitutoIdentificacao" class="text-sm font-medium text-gray-600 block mb-1">ID:</label>
-                        <input type="tel" id="pmSubstitutoIdentificacao" placeholder="ID será preenchido ou pode ser digitado" pattern="\d*" class="w-full p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 rounded-lg">
-                        <p id="pmSubstitutoIdentificacaoWarning" class="text-xs text-red-600 mt-1 hidden">Campo obrigatório.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Seção de Datas -->
-        <div class="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
-            <h3 class="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wider">3. Datas da Permuta</h3>
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Calendário para Serviço Permutado -->
-                <div class="flex flex-col">
-                    <label class="text-base font-semibold text-gray-700 mb-2">Data(s) do Serviço Permutado:</label>
-                    <p class="text-xs text-gray-500 mb-3">Clique para selecionar um intervalo de até 3 dias.</p>
-                    <div id="calendar-container-service" class="w-full max-w-sm mx-auto bg-white p-4 rounded-lg border"></div>
-                    <input type="hidden" id="dataServicoPermutadoInicio">
-                    <input type="hidden" id="dataServicoPermutadoFim">
-                    <p id="dataServicoPermutadoWarning" class="text-sm text-red-600 mt-3 hidden font-semibold text-center">É necessário selecionar um intervalo de datas.</p>
-                </div>
-                <!-- Datas do Pagamento -->
-                <div class="flex flex-col">
-                     <div class="flex items-center justify-between mb-2">
-                        <label class="text-base font-semibold text-gray-700">Data(s) do Pagamento:</label>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="noPagamentoCheckbox" class="form-checkbox h-4 w-4 rounded text-blue-600 border-gray-400 focus:ring-blue-500">
-                            <label for="noPagamentoCheckbox" class="text-xs text-gray-600 ml-2 cursor-pointer">Não há pagamento</label>
-                        </div>
-                    </div>
-                    <div id="payment-fields-container">
-                        <p class="text-xs text-gray-500 mb-3">Clique para selecionar um intervalo de até 3 dias.</p>
-                        <div id="calendar-container-payment" class="w-full max-w-sm mx-auto bg-white p-4 rounded-lg border"></div>
-                        <input type="hidden" id="dataPagamentoServicoInicio">
-                        <input type="hidden" id="dataPagamentoServicoFim">
-                        <p id="dataPagamentoWarning" class="text-sm text-red-600 mt-3 hidden font-semibold text-center">É necessário selecionar um intervalo de datas.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Botões de Ação -->
-        <div class="no-print flex flex-col md:flex-row justify-center items-center gap-4 mt-10 border-t-2 border-gray-100 pt-8">
-            <button onclick="printForm()" class="w-full md:w-auto bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 flex items-center justify-center gap-2">
-                <i data-lucide="check-circle" class="w-5 h-5"></i>
-                <span>Concluir e Imprimir</span>
-            </button>
-            <button onclick="signWithGovBr()" class="w-full md:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300 flex items-center justify-center gap-2">
-                <i data-lucide="pen-square" class="w-5 h-5"></i>
-                <span>Ir para o GOV.BR</span>
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // Inicializa a biblioteca de ícones Lucide
-        lucide.createIcons();
-        
-        // --- LÓGICA DO ALERTA CUSTOMIZADO ---
-        function showCustomAlert(title, message) {
-            document.getElementById('alert-title').textContent = title;
-            document.getElementById('alert-message').textContent = message;
-            document.getElementById('custom-alert').classList.remove('hidden');
-        }
-        window.closeCustomAlert = function() {
-            document.getElementById('custom-alert').classList.add('hidden');
+        window.FirebaseLib = { 
+            initializeApp, 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged, 
+            getFirestore, 
+            collection, 
+            doc, 
+            onSnapshot, 
+            addDoc, 
+            deleteDoc, 
+            updateDoc, 
+            query 
         };
-        
-        // --- LÓGICA DE SELEÇÃO E PREENCHIMENTO DOS PMs ---
-        const pmData = {
-            "Cb PM 562/14 Edmilson": "N/A",
-            "Cb PM 626/14 Coriolano": "N/A",
-            "Cb PM 636/14 Massole": "N/A",
-            "Cb PM 915/14 Froes": "N/A",
-            "Cb PM 1042/14 Mário Neto": "N/A",
-            "Cb PM 274/15 J. Froes": "N/A",
-            "Cb PM 372/15 Cruz": "N/A",
-            "Sd PM 473/16 André": "849351",
-            "Sd PM 604/17 Élson": "N/A",
-            "Sd PM 868/17 P. Souza": "N/A",
-            "Sd PM 408/18 Ribeiro": "N/A",
-            "Sd PM 424/18 Rodrigues": "N/A",
-            "Sd PM 885/18 Albert": "N/A",
-            "Sd PM 1034/18 Francinilson": "N/A",
-            "Sd PM 1083/18 Moise": "N/A",
-            "Sd PM 10/20 Garcez": "N/A",
-            "Sd PM 72/20 S. Filho": "N/A",
-            "Sd PM 003/21 Maycon": "N/A",
-            "Sd PM 006/21 Carvalho": "N/A",
-            "Sd PM 171/22 Fonteles": "N/A",
-            "Sd PM 380/22 Soares": "N/A",
-            "Sd PM 429/22 Castro": "N/A",
-            "Sd PM 502/22 Sales": "869293",
-            "Sd PM 572/22 Theodósio": "871896",
-            "Sd PM 246/24 Lobato": "N/A",
-            "Sd PM 457/24 Eduardo Silva": "869987"
-        };
-        
-        const pmSubstituidoNomeSelect = document.getElementById('pmSubstituidoNome');
-        const pmSubstituidoIdentificacaoInput = document.getElementById('pmSubstituidoIdentificacao');
-        const pmSubstitutoNomeSelect = document.getElementById('pmSubstitutoNome');
-        const pmSubstitutoIdentificacaoInput = document.getElementById('pmSubstitutoIdentificacao');
+    </script>
 
-        function fillId(selectElement, targetInput) {
-            const selectedName = selectElement.value;
-            targetInput.value = pmData[selectedName] || '';
-            targetInput.dispatchEvent(new Event('input')); // Dispara validação
-        }
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-        function populatePmSelects() {
-            const selects = [pmSubstituidoNomeSelect, pmSubstitutoNomeSelect];
-            selects.forEach(select => {
-                for (const name in pmData) {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    select.appendChild(option);
-                }
-            });
-        }
-        
-        pmSubstituidoNomeSelect.addEventListener('change', () => fillId(pmSubstituidoNomeSelect, pmSubstituidoIdentificacaoInput));
-        pmSubstitutoNomeSelect.addEventListener('change', () => fillId(pmSubstitutoNomeSelect, pmSubstitutoIdentificacaoInput));
+        // --- LISTA FIXA DE MILITARES (BACKUP) ---
+        const LISTA_INICIAL = [
+            { idDoc: "1", nome: "Cb PM 562/14 Edmilson", idMilitar: "N/A" },
+            { idDoc: "2", nome: "Cb PM 626/14 Coriolano", idMilitar: "N/A" },
+            { idDoc: "3", nome: "Cb PM 636/14 Massole", idMilitar: "N/A" },
+            { idDoc: "4", nome: "Cb PM 915/14 Froes", idMilitar: "N/A" },
+            { idDoc: "5", nome: "Cb PM 1042/14 Mário Neto", idMilitar: "N/A" },
+            { idDoc: "6", nome: "Cb PM 274/15 J. Froes", idMilitar: "N/A" },
+            { idDoc: "7", nome: "Cb PM 372/15 Cruz", idMilitar: "N/A" },
+            { idDoc: "8", nome: "Cb PM 196/16 Vasconcelos", idMilitar: "N/A" },
+            { idDoc: "9", nome: "Cb PM 473/16 André", idMilitar: "849351" },
+            { idDoc: "10", nome: "Sd PM 604/17 Élson", idMilitar: "N/A" },
+            { idDoc: "11", nome: "Sd PM 868/17 P. Souza", idMilitar: "N/A" },
+            { idDoc: "12", nome: "Sd PM 408/18 Ribeiro", idMilitar: "N/A" },
+            { idDoc: "13", nome: "Sd PM 424/18 Rodrigues", idMilitar: "N/A" },
+            { idDoc: "14", nome: "Sd PM 885/18 Albert", idMilitar: "871512" },
+            { idDoc: "15", nome: "Sd PM 1034/18 Francinilson", idMilitar: "N/A" },
+            { idDoc: "16", nome: "Sd PM 1083/18 Moise", idMilitar: "N/A" },
+            { idDoc: "17", nome: "Sd PM 10/20 Garcez", idMilitar: "N/A" },
+            { idDoc: "18", nome: "Sd PM 72/20 S. Filho", idMilitar: "N/A" },
+            { idDoc: "19", nome: "Sd PM 003/21 Maycon", idMilitar: "N/A" },
+            { idDoc: "20", nome: "Sd PM 006/21 Carvalho", idMilitar: "N/A" },
+            { idDoc: "21", nome: "Sd PM 171/22 Fonteles", idMilitar: "N/A" },
+            { idDoc: "22", nome: "Sd PM 380/22 Soares", idMilitar: "N/A" },
+            { idDoc: "23", nome: "Sd PM 429/22 Castro", idMilitar: "N/A" },
+            { idDoc: "24", nome: "Sd PM 502/22 Sales", idMilitar: "869293" },
+            { idDoc: "25", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
+            { idDoc: "26", nome: "Sd PM 246/24 Lobato", idMilitar: "N/A" },
+            { idDoc: "27", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
+        ].sort((a, b) => a.nome.localeCompare(b.nome));
 
-        // --- LÓGICA GENÉRICA DO CALENDÁRIO ---
-        
-        // Objetos de estado para cada calendário
-        let serviceCalendarState = {
-            currentDate: new Date(), selectedStartDate: null, selectedEndDate: null,
-            containerId: 'calendar-container-service', startDateInputId: 'dataServicoPermutadoInicio',
-            endDateInputId: 'dataServicoPermutadoFim', warningId: 'dataServicoPermutadoWarning'
-        };
-        let paymentCalendarState = {
-            currentDate: new Date(), selectedStartDate: null, selectedEndDate: null,
-            containerId: 'calendar-container-payment', startDateInputId: 'dataPagamentoServicoInicio',
-            endDateInputId: 'dataPagamentoServicoFim', warningId: 'dataPagamentoWarning'
+        const ADMIN_PASSWORD = "32573515";
+
+        // --- COMPONENTES DE ÍCONES SVG ---
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                settings: <><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></>,
+                check: <polyline points="20 6 9 17 4 12"/>,
+                pen: <><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></>,
+                home: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+                plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+                trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>,
+                x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+                lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+                chevronLeft: <polyline points="15 18 9 12 15 6"/>,
+                chevronRight: <polyline points="9 18 15 12 9 6"/>,
+                arrowUp: <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>,
+                arrowDown: <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>,
+                save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name]}
+                </svg>
+            );
         };
 
-        function renderCalendar(state) {
-            const container = document.getElementById(state.containerId);
-            const month = state.currentDate.getMonth();
-            const year = state.currentDate.getFullYear();
-            const firstDay = new Date(year, month, 1).getDay();
-            const lastDate = new Date(year, month + 1, 0).getDate();
-            const today = new Date();
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        // =========================================================================
+        // CONFIGURAÇÃO FIREBASE
+        // =========================================================================
+        const myCustomFirebaseConfig = {
+            apiKey: "AIzaSyAK5pxlxoaA37EGs3TRw1Q8F-9ghFw-o9w",
+            authDomain: "portaldepermutas.firebaseapp.com",
+            projectId: "portaldepermutas",
+            storageBucket: "portaldepermutas.firebasestorage.app",
+            messagingSenderId: "496739921207",
+            appId: "1:496739921207:web:04ceef2d6a4d8679937eb2",
+            measurementId: "G-JBKLB3DDG1"
+        };
+
+        const getActiveConfig = () => {
+            if (myCustomFirebaseConfig.apiKey) return myCustomFirebaseConfig;
+            if (typeof __firebase_config !== 'undefined') return JSON.parse(__firebase_config);
+            return null;
+        };
+
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'permuta-oficial';
+
+        function App() {
+            // --- ESTADO LOCAL ---
+            const [militares, setMilitares] = useState(LISTA_INICIAL);
             
-            let calendarHTML = `
-                <div class="flex justify-between items-center mb-4">
-                    <button class="prev-month p-2 rounded-full hover:bg-gray-100"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-                    <h4 class="font-bold text-lg">${monthNames[month]} ${year}</h4>
-                    <button class="next-month p-2 rounded-full hover:bg-gray-100"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
-                </div>
-                <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-500 mb-2">
-                    <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                </div>
-                <div class="calendar-days grid grid-cols-7 gap-1">`;
+            const [db, setDb] = useState(null);
+            const [user, setUser] = useState(null);
+            const [isOfflineMode, setIsOfflineMode] = useState(false);
+            const [authErrorMsg, setAuthErrorMsg] = useState("");
 
-            for (let i = 0; i < firstDay; i++) { calendarHTML += `<div></div>`; }
-
-            for (let i = 1; i <= lastDate; i++) {
-                const dayDate = new Date(year, month, i);
-                let classes = 'calendar-day cursor-pointer h-9 w-9 flex items-center justify-center rounded-full';
-                if (dayDate < today && dayDate.toDateString() !== today.toDateString()) { classes += ' day-disabled'; }
-                if (state.selectedStartDate && dayDate.getTime() === state.selectedStartDate.getTime()) { classes += ' day-selected'; } 
-                else if (state.selectedEndDate && dayDate.getTime() === state.selectedEndDate.getTime()) { classes += ' day-selected'; } 
-                else if (state.selectedStartDate && state.selectedEndDate && dayDate > state.selectedStartDate && dayDate < state.selectedEndDate) { classes += ' day-in-range'; }
-                calendarHTML += `<div class="${classes}" data-date="${dayDate.toISOString().split('T')[0]}">${i}</div>`;
-            }
-
-            calendarHTML += `</div>`;
-            container.innerHTML = calendarHTML;
-            lucide.createIcons();
-
-            container.querySelector('.prev-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(state); });
-            container.querySelector('.next-month').addEventListener('click', () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(state); });
-            container.querySelector('.calendar-days').addEventListener('click', (e) => handleDayClick(e, state));
-        }
-
-        function handleDayClick(e, state) {
-            if (!e.target.dataset.date || e.target.classList.contains('day-disabled')) return;
-            const clickedDate = new Date(e.target.dataset.date + 'T00:00:00');
-
-            if (!state.selectedStartDate || (state.selectedStartDate && state.selectedEndDate)) {
-                state.selectedStartDate = clickedDate;
-                state.selectedEndDate = null;
-            } else {
-                state.selectedEndDate = clickedDate;
-                if (state.selectedEndDate < state.selectedStartDate) { [state.selectedStartDate, state.selectedEndDate] = [state.selectedEndDate, state.selectedStartDate]; }
-                const diffTime = Math.abs(state.selectedEndDate - state.selectedStartDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays > 2) {
-                    showCustomAlert('Intervalo Inválido', 'Você pode selecionar no máximo 3 dias consecutivos.');
-                    state.selectedStartDate = clickedDate;
-                    state.selectedEndDate = null;
-                }
-            }
-            const startDateValue = state.selectedStartDate ? state.selectedStartDate.toISOString().split('T')[0] : '';
-            const endDateValue = state.selectedEndDate ? state.selectedEndDate.toISOString().split('T')[0] : startDateValue;
+            const [isAdminMode, setIsAdminMode] = useState(false);
+            const [showAdminLogin, setShowAdminLogin] = useState(false);
+            const [loginPassword, setLoginPassword] = useState("");
             
-            document.getElementById(state.startDateInputId).value = startDateValue;
-            document.getElementById(state.endDateInputId).value = endDateValue;
+            const [localizacao, setLocalizacao] = useState("TURIAÇU");
+            const [pmSubstituido, setPmSubstituido] = useState({ nome: "", id: "" });
+            const [pmSubstituto, setPmSubstituto] = useState({ nome: "", id: "" });
+            const [comandante, setComandante] = useState("JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM");
+            const [noPagamento, setNoPagamento] = useState(false);
             
-            validateDateSelection(state);
-            renderCalendar(state);
-        }
+            // Estado para gerenciar QTU e Carga Horária
+            const [tipoServico, setTipoServico] = useState("24H");
 
-        // --- LÓGICA DO PAGAMENTO CHECKBOX ---
-        const noPagamentoCheckbox = document.getElementById('noPagamentoCheckbox');
-        const paymentContainer = document.getElementById('payment-fields-container');
-        noPagamentoCheckbox.addEventListener('change', function() {
-            paymentContainer.classList.toggle('hidden', this.checked);
-            if (this.checked) {
-                paymentCalendarState.selectedStartDate = null;
-                paymentCalendarState.selectedEndDate = null;
-                document.getElementById(paymentCalendarState.startDateInputId).value = '';
-                document.getElementById(paymentCalendarState.endDateInputId).value = '';
-                renderCalendar(paymentCalendarState);
-                validateDateSelection(paymentCalendarState);
-            }
-        });
+            const [serviceDates, setServiceDates] = useState({ start: null, end: null, currentMonth: new Date() });
+            const [paymentDates, setPaymentDates] = useState({ start: null, end: null, currentMonth: new Date() });
+            const [formAlert, setFormAlert] = useState(null);
 
-        // --- VALIDAÇÃO GERAL ---
-        function validateField(fieldId, warningId) {
-            const field = document.getElementById(fieldId);
-            const isValid = field.value.trim() !== '';
-            field.classList.toggle('input-error', !isValid);
-            document.getElementById(warningId).classList.toggle('hidden', isValid);
-            return isValid;
-        }
+            // --- ESTADO DE EDIÇÃO (ADMIN) ---
+            const [editingId, setEditingId] = useState(null);
+            const [editName, setEditName] = useState("");
+            const [editIdMilitar, setEditIdMilitar] = useState("");
 
-        function validateDateSelection(state) {
-            const startDateInput = document.getElementById(state.startDateInputId);
-            const warning = document.getElementById(state.warningId);
-            const isValid = startDateInput.value.trim() !== '';
-            warning.classList.toggle('hidden', isValid);
-            return isValid;
-        }
-        
-        const requiredFields = [
-            { id: 'pmSubstituidoNome', warningId: 'pmSubstituidoNomeWarning' },
-            { id: 'pmSubstituidoIdentificacao', warningId: 'pmSubstituidoIdentificacaoWarning' },
-            { id: 'pmSubstitutoNome', warningId: 'pmSubstitutoNomeWarning' },
-            { id: 'pmSubstitutoIdentificacao', warningId: 'pmSubstitutoIdentificacaoWarning' },
-        ];
-        requiredFields.forEach(field => {
-            document.getElementById(field.id).addEventListener('input', () => validateField(field.id, field.warningId));
-        });
+            // --- INICIALIZAÇÃO DO FIREBASE ---
+            useEffect(() => {
+                const config = getActiveConfig();
+                if (!config) return;
 
-        function validateAllFields() {
-            let isValid = true;
-            requiredFields.forEach(field => { isValid = validateField(field.id, field.warningId) && isValid; });
-            isValid = validateDateSelection(serviceCalendarState) && isValid;
-            
-            if (!noPagamentoCheckbox.checked) {
-                isValid = validateDateSelection(paymentCalendarState) && isValid;
-            }
-            
-            if (!isValid) { showCustomAlert('Campos Incompletos', 'Por favor, preencha todos os campos obrigatórios.'); }
-            return isValid;
-        }
-        
-        // --- LÓGICA DE IMPRESSÃO ---
-        function formatarDataRange(startDateStr, endDateStr) {
-            if (!startDateStr || !endDateStr) return '';
-            const dates = [];
-            let currentDate = new Date(startDateStr + 'T00:00:00');
-            const finalDate = new Date(endDateStr + 'T00:00:00');
-            while (currentDate <= finalDate) {
-                dates.push(new Date(currentDate));
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            if (dates.length === 0) return '';
-            if (dates.length === 1) {
-                const d = dates[0];
-                return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-            }
+                const checkFirebase = setInterval(async () => {
+                    if (window.FirebaseLib) {
+                        clearInterval(checkFirebase);
+                        const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseLib;
+                        try {
+                            const app = initializeApp(config);
+                            const auth = getAuth(app);
+                            const firestore = getFirestore(app);
+                            setDb(firestore);
+                            
+                            const initAuth = async () => {
+                                const isCustom = config.apiKey === myCustomFirebaseConfig.apiKey;
+                                try {
+                                    if (!isCustom && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                        await signInWithCustomToken(auth, __initial_auth_token);
+                                    } else {
+                                        await signInAnonymously(auth);
+                                    }
+                                } catch (loginErr) {
+                                    console.warn("Autenticação falhou:", loginErr.code);
+                                    if (loginErr.code === 'auth/operation-not-allowed') {
+                                        setAuthErrorMsg("Login Anônimo desativado no Firebase.");
+                                    } else {
+                                        setAuthErrorMsg(`Erro de conexão: ${loginErr.code}`);
+                                    }
+                                    setIsOfflineMode(true);
+                                }
+                            };
+                            
+                            await initAuth();
+                            onAuthStateChanged(auth, (u) => {
+                                setUser(u);
+                                if(u) setIsOfflineMode(false);
+                            });
+                        } catch (err) { 
+                            console.error("Erro Init:", err); 
+                            setIsOfflineMode(true);
+                        }
+                    }
+                }, 100);
+                return () => clearInterval(checkFirebase);
+            }, []);
 
-            let result = '';
-            let currentMonth = dates[0].getMonth();
-            let currentYear = dates[0].getFullYear();
-            let daysInGroup = [];
-
-            for (let i = 0; i < dates.length; i++) {
-                const d = dates[i];
-                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-                    daysInGroup.push(String(d.getDate()).padStart(2, '0'));
-                } else {
-                    // Month changed, format the previous group
-                    let dayStr = daysInGroup.join(', ');
-                    result += `${dayStr}/${String(currentMonth + 1).padStart(2, '0')}, `;
+            // --- ESCUTA DE DADOS DO FIRESTORE (MODO HÍBRIDO) ---
+            useEffect(() => {
+                if (!user || !db) return;
+                const { collection, onSnapshot, addDoc } = window.FirebaseLib;
+                
+                try {
+                    const colRef = collection(db, 'militares_lista');
                     
-                    // Start new group
-                    currentMonth = d.getMonth();
-                    currentYear = d.getFullYear();
-                    daysInGroup = [String(d.getDate()).padStart(2, '0')];
+                    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+                        const list = snapshot.docs.map(doc => ({ ...doc.data(), idDoc: doc.id }));
+                        if (list.length > 0) {
+                            setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
+                        } else if (!snapshot.metadata.fromCache) {
+                            LISTA_INICIAL.forEach(m => addDoc(colRef, m));
+                        }
+                    }, (error) => {
+                        console.warn("Aviso Firestore:", error);
+                        if (error.code === 'permission-denied') {
+                            setAuthErrorMsg("Permissão Negada! Verifique as Regras do Firestore.");
+                            setIsOfflineMode(true);
+                        }
+                    });
+
+                    return () => unsubscribe();
+                } catch (e) {
+                    console.error("Erro ao configurar listener:", e);
                 }
-            }
+            }, [user, db]);
 
-            // Format the last group
-            let dayStr = daysInGroup.join(' - ');
-            result += `${dayStr}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
+            // --- ATUALIZAÇÃO AUTOMÁTICA DE TIPO DE SERVIÇO (BASED ON DATES) ---
+            useEffect(() => {
+                if (serviceDates.start && serviceDates.end) {
+                    const diffTime = Math.abs(serviceDates.end - serviceDates.start);
+                    const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    if (dias === 2) setTipoServico("48H");
+                    else if (dias >= 3) setTipoServico("72H");
+                } else if (serviceDates.start) {
+                    // Se for apenas 1 dia, mantém QTU se estiver selecionado, senão reseta para 24H
+                    if (tipoServico !== '1QTU' && tipoServico !== '2QTU') {
+                        setTipoServico("24H");
+                    }
+                }
+            }, [serviceDates.start, serviceDates.end]);
 
-            return result;
+            // --- FUNÇÕES ADMIN ---
+            const addMilitarLocal = (nome, id) => {
+                const newMilitar = { nome: nome, idMilitar: id };
+                if (db && user && !isOfflineMode) {
+                    const { collection, addDoc } = window.FirebaseLib;
+                    addDoc(collection(db, 'militares_lista'), newMilitar);
+                } else {
+                    const newLocal = { ...newMilitar, idDoc: Date.now().toString() };
+                    setMilitares([...militares, newLocal].sort((a, b) => a.nome.localeCompare(b.nome)));
+                }
+            };
+
+            const deleteMilitarLocal = async (idDoc) => {
+                if(!window.confirm("Tem certeza que deseja excluir este militar?")) return;
+                
+                // ATUALIZAÇÃO OTIMISTA: Remove da tela imediatamente
+                setMilitares(current => current.filter(m => m.idDoc !== idDoc));
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, deleteDoc } = window.FirebaseLib;
+                        await deleteDoc(doc(db, 'militares_lista', idDoc));
+                    } catch (err) {
+                        console.error("Erro ao excluir no banco:", err);
+                    }
+                }
+            };
+
+            const startEdit = (m) => {
+                setEditingId(m.idDoc);
+                setEditName(m.nome);
+                setEditIdMilitar(m.idMilitar);
+            };
+
+            const saveEdit = async () => {
+                // ATUALIZAÇÃO OTIMISTA PARA EDIÇÃO
+                const optimisticList = militares.map(m => 
+                    m.idDoc === editingId ? { ...m, nome: editName, idMilitar: editIdMilitar } : m
+                );
+                setMilitares(optimisticList);
+                const idToUpdate = editingId;
+                const dataToUpdate = { nome: editName, idMilitar: editIdMilitar };
+                setEditingId(null);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        const docRef = doc(db, 'militares_lista', idToUpdate);
+                        await updateDoc(docRef, dataToUpdate);
+                    } catch (err) {
+                        console.error("Erro ao atualizar:", err);
+                        setFormAlert({ title: "Aviso", message: "Atualizado localmente, mas houve erro ao salvar no banco." });
+                    }
+                }
+            };
+
+            const moveUp = (index) => {
+                if (index === 0) return;
+                const newList = [...militares];
+                [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
+                setMilitares(newList);
+            };
+
+            const moveDown = (index) => {
+                if (index === militares.length - 1) return;
+                const newList = [...militares];
+                [newList[index + 1], newList[index]] = [newList[index], newList[index + 1]];
+                setMilitares(newList);
+            };
+
+            const formatarDataRange = (startDate, endDate) => {
+                if (!startDate) return '';
+                const start = new Date(startDate);
+                const end = endDate ? new Date(endDate) : start;
+                const dates = [];
+                let curr = new Date(start);
+                while (curr <= end) { dates.push(new Date(curr)); curr.setDate(curr.getDate() + 1); }
+                if (dates.length === 1) return `${String(dates[0].getDate()).padStart(2, '0')}/${String(dates[0].getMonth() + 1).padStart(2, '0')}/${dates[0].getFullYear()}`;
+                
+                let result = '';
+                let currentMonth = dates[0].getMonth();
+                let currentYear = dates[0].getFullYear();
+                let daysInGroup = [];
+
+                for (let i = 0; i < dates.length; i++) {
+                    const d = dates[i];
+                    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                        daysInGroup.push(String(d.getDate()).padStart(2, '0'));
+                    } else {
+                        result += `${daysInGroup.join(', ')}/${String(currentMonth + 1).padStart(2, '0')}, `;
+                        currentMonth = d.getMonth();
+                        currentYear = d.getFullYear();
+                        daysInGroup = [String(d.getDate()).padStart(2, '0')];
+                    }
+                }
+                result += `${daysInGroup.join(' - ')}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
+                return result;
+            };
+
+            const handlePrint = () => {
+                if (!pmSubstituido.nome || !pmSubstituto.nome || !serviceDates.start) {
+                    setFormAlert({ title: "Campos Incompletos", message: "Preencha os nomes e selecione as datas no calendário." });
+                    return;
+                }
+
+                const servicoTexto = formatarDataRange(serviceDates.start, serviceDates.end);
+                const pagamentoTexto = !noPagamento ? formatarDataRange(paymentDates.start, paymentDates.end) : '';
+
+                const localizacaoSede = localizacao === 'SEDE' ? 'X' : '&nbsp;';
+                const localizacaoTurilandia = localizacao === 'TURILÂNDIA' ? 'X' : '&nbsp;';
+                const localizacaoTuriacu = localizacao === 'TURIAÇU' ? 'X' : '&nbsp;';
+
+                // Lógica de Impressão QTU e Horas
+                const tipo1QTU = tipoServico === '1QTU' ? 'X' : '&nbsp;';
+                const tipo2QTU = tipoServico === '2QTU' ? 'X' : '&nbsp;';
+                const tipo24 = tipoServico === '24H' ? 'X' : '&nbsp;';
+                const tipo48 = tipoServico === '48H' ? 'X' : '&nbsp;';
+                const tipo72 = tipoServico === '72H' ? 'X' : '&nbsp;';
+
+                const brasaoUrlPrint = 'https://i.ibb.co/prs9KzDJ/BRAS-O.png';
+
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Permuta Impressão</title>
+                    <style>
+                        body { font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt; }
+                        .container { width: 100%; max-width: 800px; margin: 0 auto; } .text-center { text-align: center; }
+                        .font-bold { font-weight: bold; } p { margin: 4px 0; } .header p { margin: 2px 0; }
+                        .text-sm { font-size: 11pt; } .text-xs { font-size: 9pt; } .text-base { font-size: 12pt; }
+                    </style></head><body>
+                    <div class="container">
+                        <div class="text-center" style="line-height: 1.15; margin: 0;">
+                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
+                            <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
+                            <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
+                            <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
+                            <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
+                            <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
+                            <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
+                            <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
+                        </div>
+                        <div class="mt-4 mb-4" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                            <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
+                        </div>
+                        <div style="margin-bottom: 0.25rem;">
+                            <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituido.nome.toUpperCase()} - ${pmSubstituido.id}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
+                        <div style="margin-bottom: 0.25rem; margin-top: 1.5rem;">
+                            <p class="text-base">PM SUBSTITUTO: ${pmSubstituto.nome.toUpperCase()} - ${pmSubstituto.id}</p>
+                            <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
+                        </div>
+                        <div class="mb-2" style="margin-top: 1.5rem;">
+                            <p class="text-base">Data do serviço permutado: ${servicoTexto}</p>
+                            ${!noPagamento ? `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>` : ''}
+                        </div>
+                        <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
+                            <p class="text-base">( ${tipo1QTU} ) 1º QTU - ( ${tipo2QTU} ) 2º QTU - ( ${tipo24} ) 24 Horas - ( ${tipo48} ) 48 Horas - ( ${tipo72} ) 72 Horas</p>
+                        </div>
+                        <div class="text-center" style="margin-top: 2rem;">
+                            <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
+                            <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
+                            <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">${comandante.toUpperCase()}</p>
+                            <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
+                        </div>
+                        <script>
+                            window.onload = function() {
+                                setTimeout(function() {
+                                    window.print();
+                                }, 800);
+                            }
+                        <\/script>
+                    </div></body></html>
+                `);
+                win.document.close();
+            };
+
+            const renderCalendar = (state, setState) => {
+                const month = state.currentMonth.getMonth();
+                const year = state.currentMonth.getFullYear();
+                const first = new Date(year, month, 1).getDay();
+                const last = new Date(year, month + 1, 0).getDate();
+                const today = new Date(); today.setHours(0,0,0,0);
+                const days = [];
+                for(let i=0; i<first; i++) days.push(<div key={'e'+i}/>);
+                for(let i=1; i<=last; i++) {
+                    const d = new Date(year, month, i);
+                    const isPast = d < today;
+                    const isSel = (state.start && d.getTime() === state.start.getTime()) || (state.end && d.getTime() === state.end.getTime());
+                    const inR = state.start && state.end && d > state.start && d < state.end;
+                    days.push(
+                        <div key={i} onClick={() => {
+                            if(isPast) return;
+                            let s = state.start, e = state.end;
+                            if(!s || (s && e)) { s = d; e = null; } else { e = d; if(e < s) [s, e] = [e, s]; if(Math.ceil(Math.abs(e-s)/86400000) > 2) { setFormAlert({title: "Limite", message: "Máximo 3 dias permitidos."}); s = d; e = null; }}
+                            setState({...state, start: s, end: e});
+                        }} className={`calendar-day-btn ${isPast ? 'text-gray-200 cursor-not-allowed' : 'hover:bg-blue-100'} ${isSel ? 'bg-blue-600 text-white font-bold' : ''} ${inR ? 'bg-blue-100 text-blue-800' : ''}`}>{i}</div>
+                    );
+                }
+                return days;
+            };
+
+            return (
+                <div className="min-h-screen p-4 md:p-10 flex flex-col items-center">
+                    {formAlert && (
+                        <div className="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center p-4">
+                            <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
+                                <h3 className="text-xl font-bold mb-4">{formAlert.title}</h3>
+                                <p className="text-gray-600 mb-6">{formAlert.message}</p>
+                                <button onClick={() => setFormAlert(null)} className="w-full bg-blue-600 text-white py-3 rounded-2xl font-bold">OK</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {showAdminLogin && (
+                        <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center p-4">
+                            <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full">
+                                <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Icon name="lock" /> Administração</h3>
+                                <input type="password" placeholder="Senha Padrão" className="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 focus:ring-blue-500" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+                                <div className="flex gap-3">
+                                    <button onClick={() => setShowAdminLogin(false)} className="flex-1 py-3 border rounded-2xl font-bold text-gray-400 text-sm">Voltar</button>
+                                    <button onClick={() => { if(loginPassword === ADMIN_PASSWORD) { setIsAdminMode(true); setShowAdminLogin(false); setLoginPassword(""); } else { setFormAlert({title:"Erro", message:"Senha incorreta."}); } }} className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm">Entrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isAdminMode && (
+                        <div className="fixed inset-0 bg-black/60 z-[160] flex items-center justify-center p-4 backdrop-blur-sm">
+                            <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+                                <div className="p-6 border-b flex justify-between items-center bg-gray-50">
+                                    <h2 className="text-xl font-bold flex items-center gap-2">
+                                        <Icon name="settings" className="text-blue-600" /> Militares (Sessão Atual)
+                                    </h2>
+                                    <button onClick={() => setIsAdminMode(false)} className="p-2 hover:bg-gray-100 rounded-full"><Icon name="x" /></button>
+                                </div>
+                                <div className="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
+                                    {isOfflineMode && authErrorMsg && (
+                                        <div className="p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 text-xs rounded-xl mb-2">
+                                            <strong>Aviso do Sistema:</strong> {authErrorMsg} (Funcionalidade Offline)
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                                        <input id="nM" placeholder="Nome do PM" className="p-3 border rounded-xl" />
+                                        <input id="iM" placeholder="ID/Matrícula" className="p-3 border rounded-xl" />
+                                        <button onClick={() => {
+                                            const n = document.getElementById('nM').value; const i = document.getElementById('iM').value;
+                                            if(n && i) { addMilitarLocal(n, i); document.getElementById('nM').value=''; document.getElementById('iM').value=''; }
+                                        }} className="bg-blue-600 text-white rounded-xl font-bold py-2 hover:bg-blue-700 transition-colors"><Icon name="plus" className="inline mr-1"/> Add</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {militares.map((m, index) => (
+                                            <div key={m.idDoc} className="flex justify-between items-center p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
+                                                {editingId === m.idDoc ? (
+                                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 mr-2">
+                                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} className="p-2 border rounded-lg text-sm" />
+                                                        <input value={editIdMilitar} onChange={(e) => setEditIdMilitar(e.target.value)} className="p-2 border rounded-lg text-sm" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex-1">
+                                                        <p className="font-bold text-gray-800 text-sm">{m.nome}</p>
+                                                        <p className="text-xs text-gray-500">ID: {m.idMilitar}</p>
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="flex items-center gap-1">
+                                                    {editingId === m.idDoc ? (
+                                                        <button onClick={saveEdit} className="text-green-600 p-2 hover:bg-green-100 rounded-lg" title="Salvar"><Icon name="save" size={18}/></button>
+                                                    ) : (
+                                                        <button onClick={() => startEdit(m)} className="text-blue-500 p-2 hover:bg-blue-50 rounded-lg" title="Editar"><Icon name="pen" size={16}/></button>
+                                                    )}
+                                                    
+                                                    <div className="flex flex-col">
+                                                        <button onClick={() => moveUp(index)} disabled={index === 0} className={`p-1 ${index===0 ? 'text-gray-300' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'} rounded`}><Icon name="arrowUp" size={12}/></button>
+                                                        <button onClick={() => moveDown(index)} disabled={index === militares.length - 1} className={`p-1 ${index===militares.length-1 ? 'text-gray-300' : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'} rounded`}><Icon name="arrowDown" size={12}/></button>
+                                                    </div>
+
+                                                    <button onClick={() => deleteMilitarLocal(m.idDoc)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg ml-1" title="Excluir"><Icon name="trash" size={18}/></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden">
+                        <header className="p-8 md:p-12 text-center border-b bg-gray-50 relative">
+                            <button onClick={() => setShowAdminLogin(true)} className="absolute top-6 right-6 text-gray-300 hover:text-blue-600 transition-colors"><Icon name="settings" /></button>
+                            <img src="https://i.ibb.co/tP8QZ1Ys/1770146329010.png" className="h-20 mx-auto mb-6" alt="Logo" />
+                            <h1 className="text-xl font-bold text-gray-800 tracking-tight">2ª COMPANHIA</h1>
+                            <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase tracking-[0.2em]">DPM DE TURIAÇU</p>
+                            <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter text-center">Permuta de Serviço</h2>
+                            <div className="flex justify-center">
+                                <select value={localizacao} onChange={e => setLocalizacao(e.target.value)} className="w-full max-w-xs p-4 border-2 border-gray-100 rounded-2xl text-center font-bold text-lg outline-none focus:border-blue-500 bg-white cursor-pointer shadow-sm">
+                                    <option>TURIAÇU</option><option>SEDE</option><option>TURILÂNDIA</option>
+                                </select>
+                            </div>
+                        </header>
+
+                        <main className="p-6 md:p-12 space-y-12">
+                            <div className="grid md:grid-cols-2 gap-10">
+                                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6 text-center">1. PM SUBSTITUÍDO</h3>
+                                    <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituido.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituido({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
+                                        <option value="">Selecione o militar...</option>
+                                        {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
+                                    </select>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
+                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" value={pmSubstituido.id} onChange={(e) => setPmSubstituido({...pmSubstituido, id: e.target.value})} placeholder="---" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                                    <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-6 text-center">2. PM SUBSTITUTO</h3>
+                                    <select className="w-full p-4 bg-white border border-gray-200 rounded-2xl mb-5 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-500" value={pmSubstituto.nome} onChange={e => { const m = militares.find(x => x.nome === e.target.value); setPmSubstituto({nome: e.target.value, id: m ? m.idMilitar : ""}); }}>
+                                        <option value="">Selecione o militar...</option>
+                                        {militares.map(m => <option key={m.idDoc} value={m.nome}>{m.nome}</option>)}
+                                    </select>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 tracking-widest uppercase">ID:</span>
+                                        <input className="w-full p-4 pl-12 bg-white border border-gray-100 rounded-2xl font-bold text-gray-500 shadow-inner" value={pmSubstituto.id} onChange={(e) => setPmSubstituto({...pmSubstituto, id: e.target.value})} placeholder="---" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
+                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-8 text-center">3. DATAS DA PERMUTA</h3>
+                                <div className="grid lg:grid-cols-2 gap-12">
+                                    <div>
+                                        <label className="font-bold text-gray-700 text-xs block mb-3 ml-2">Serviço Permutado</label>
+                                        <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
+                                            <div className="flex justify-between items-center mb-6 px-2">
+                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
+                                                <span className="font-black text-[10px] uppercase tracking-widest">{serviceDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
+                                                <button onClick={() => setServiceDates({...serviceDates, currentMonth: new Date(serviceDates.currentMonth.setMonth(serviceDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
+                                            </div>
+                                            <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-gray-300 mb-3 uppercase">
+                                                {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i) => <div key={i}>{d}</div>)}
+                                            </div>
+                                            <div className="calendar-grid gap-1">{renderCalendar(serviceDates, setServiceDates)}</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between mb-3 px-2">
+                                            <span className="font-bold text-gray-700 text-xs">Pagamento</span>
+                                            <label className="flex items-center gap-2 text-[9px] font-black cursor-pointer text-gray-400 uppercase tracking-tighter">
+                                                <input type="checkbox" checked={noPagamento} onChange={e => setNoPagamento(e.target.checked)} className="rounded-sm text-blue-600 border-gray-300 focus:ring-0" />
+                                                Não há pagamento
+                                            </label>
+                                        </div>
+                                        {!noPagamento ? (
+                                            <div className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm">
+                                                <div className="flex justify-between items-center mb-6 px-2">
+                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()-1))})}><Icon name="chevronLeft" size={18}/></button>
+                                                    <span className="font-black text-[10px] uppercase tracking-widest">{paymentDates.currentMonth.toLocaleString('pt-BR', {month:'long', year:'numeric'})}</span>
+                                                    <button onClick={() => setPaymentDates({...paymentDates, currentMonth: new Date(paymentDates.currentMonth.setMonth(paymentDates.currentMonth.getMonth()+1))})}><Icon name="chevronRight" size={18}/></button>
+                                                </div>
+                                                <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-gray-300 mb-3 uppercase">
+                                                    {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i) => <div key={i}>{d}</div>)}
+                                                </div>
+                                                <div className="calendar-grid gap-1">{renderCalendar(paymentDates, setPaymentDates)}</div>
+                                            </div>
+                                        ) : <div className="h-56 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] text-gray-300 font-bold italic text-sm text-center px-6">Permuta simples (sem devolução imediata)</div>}
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-8 pt-6 border-t border-gray-100">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div>
+                                            <label className="font-bold text-gray-700 text-xs block mb-1 ml-2">Duração do Serviço</label>
+                                            <p className="text-[10px] text-gray-400 ml-2">Selecione o turno ou a carga horária correspondente.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[
+                                                { id: '1QTU', label: '1º QTU (Dia)' },
+                                                { id: '2QTU', label: '2º QTU (Noite)' },
+                                                { id: '24H', label: '24 Horas' },
+                                                { id: '48H', label: '48 Horas' },
+                                                { id: '72H', label: '72 Horas' }
+                                            ].map(op => (
+                                                <label key={op.id} className={`cursor-pointer px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${tipoServico === op.id ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-100 bg-white text-gray-500 hover:border-blue-200'}`}>
+                                                    <input type="radio" name="tipoServico" value={op.id} checked={tipoServico === op.id} onChange={e => setTipoServico(e.target.value)} className="hidden" />
+                                                    {op.label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                                <h3 className="font-bold text-blue-800 text-[10px] uppercase tracking-widest mb-4">4. COMANDANTE AUTORIZADOR</h3>
+                                <input className="w-full p-4 bg-white border border-gray-200 rounded-2xl font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" value={comandante} onChange={e => setComandante(e.target.value)} />
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row justify-center items-center gap-6 pt-10 border-t border-gray-100">
+                                <button onClick={handlePrint} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-blue-700 text-white px-12 py-5 rounded-[2.2rem] font-black shadow-xl hover:bg-blue-800 transform hover:-translate-y-1 transition-all active:scale-95"><Icon name="check" size={24}/> CONCLUIR E IMPRIMIR</button>
+                                <button onClick={() => window.open('https://sso.acesso.gov.br/login', '_blank')} className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gray-100 text-gray-700 px-10 py-5 rounded-[2.2rem] font-bold hover:bg-gray-200 transform hover:-translate-y-1 transition-all active:scale-95"><Icon name="pen" size={20}/> IR AO GOV.BR</button>
+                                <a href="https://projetobo.github.io/portal-2CIA/home.html" className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white border-2 border-gray-100 text-gray-500 px-10 py-5 rounded-[2.2rem] font-bold hover:bg-gray-50 transform hover:-translate-y-1 transition-all active:scale-95"><Icon name="home" size={20}/> INÍCIO</a>
+                            </div>
+                        </main>
+                    </div>
+                    <footer className="text-center mt-12 text-white/30 text-[10px] font-black uppercase tracking-[0.4em] pb-10">Portal 2ª Companhia / 10º Batalhão PMMA</footer>
+                </div>
+            );
         }
 
-        function printForm() {
-            if (!validateAllFields()) return;
-            
-            const pmSubstituidoNome = document.getElementById('pmSubstituidoNome').value.toUpperCase();
-            const pmSubstituidoId = document.getElementById('pmSubstituidoIdentificacao').value;
-            const pmSubstitutoNome = document.getElementById('pmSubstitutoNome').value.toUpperCase();
-            const pmSubstitutoId = document.getElementById('pmSubstitutoIdentificacao').value;
-            const servicoPermutadoInicio = document.getElementById('dataServicoPermutadoInicio').value;
-            const servicoPermutadoFim = document.getElementById('dataServicoPermutadoFim').value;
-            const pagamentoInicio = document.getElementById('dataPagamentoServicoInicio').value;
-            const pagamentoFim = document.getElementById('dataPagamentoServicoFim').value;
-            const noPagamento = document.getElementById('noPagamentoCheckbox').checked;
-
-            const localizacaoSelecionada = document.getElementById('localizacaoSelect').value;
-
-            let localizacaoSede = '&nbsp;';
-            let localizacaoTurilandia = '&nbsp;';
-            let localizacaoTuriacu = '&nbsp;';
-
-            if (localizacaoSelecionada === 'SEDE') {
-                localizacaoSede = 'X';
-            } else if (localizacaoSelecionada === 'TURILÂNDIA') {
-                localizacaoTurilandia = 'X';
-            } else if (localizacaoSelecionada === 'TURIAÇU') {
-                localizacaoTuriacu = 'X';
-            }
-            
-            const diasServico = servicoPermutadoInicio && servicoPermutadoFim ? Math.ceil((new Date(servicoPermutadoFim) - new Date(servicoPermutadoInicio)) / (1000 * 60 * 60 * 24)) + 1 : 0;
-            let tipo24Horas = diasServico === 1 ? 'X' : '&nbsp;';
-            let tipo48Horas = diasServico === 2 ? 'X' : '&nbsp;';
-            let tipo72Horas = diasServico >= 3 ? 'X' : '&nbsp;';
-
-            const servicoPermutadoTexto = formatarDataRange(servicoPermutadoInicio, servicoPermutadoFim);
-            
-            let pagamentoHtml = '';
-            if (!noPagamento) {
-                const pagamentoTexto = formatarDataRange(pagamentoInicio, pagamentoFim);
-                pagamentoHtml = `<p class="text-base">Data do pagamento do serviço: ${pagamentoTexto}</p>`;
-            }
-            
-            const brasaoUrlPrint = 'https://i.ibb.co/prs9KzDJ/BRAS-O.png';
-
-            const printContent = `
-                <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Formulário de Permuta - Impressão</title>
-                <style>
-                    body { font-family: 'Times New Roman', Times, serif; margin: 1.5cm; line-height: 1.15; font-size: 12pt; }
-                    .container { width: 100%; max-width: 800px; margin: 0 auto; } .text-center { text-align: center; }
-                    .font-bold { font-weight: bold; } p { margin: 4px 0; } .header p { margin: 2px 0; }
-                    .text-sm { font-size: 11pt; } .text-xs { font-size: 9pt; } .text-base { font-size: 12pt; }
-                </style></head><body>
-                <div class="container">
-                    <div class="text-center" style="line-height: 1.15; margin: 0;">
-                        <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
-                        <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
-                        <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
-                        <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
-                        <p class="text-sm" style="margin: 0;">10º BATALHÃO DA POLÍCIA MILITAR DO MARANHÃO</p>
-                        <p class="text-sm" style="margin: 0;">2ª COMPANHIA DO 10° BATALHÃO DE POLÍCIA MILITAR</p>
-                        <p class="text-xs" style="margin: 0;">Rua Dr. Paulo Ramos, s/nº, Centro, Santa Helena - MA, Telefax: (98) 99243-6850 - Email: 2cia10bpm@gmail.com</p>
-                        <p class="font-bold" style="margin-top: 2rem; margin-bottom: 0;">FORMULÁRIO DE AUTORIZAÇÃO PARA PERMUTA DE SERVIÇO</p>
-                    </div>
-                    <div class="mt-4 mb-4" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-                        <p class="text-base">SEDE: ( ${localizacaoSede} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURILÂNDIA: ( ${localizacaoTurilandia} )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DPM TURIAÇU: ( ${localizacaoTuriacu} )</p>
-                    </div>
-                    <div style="margin-bottom: 0.25rem;">
-                        <p class="text-base">PM SUBSTITUÍDO: ${pmSubstituidoNome} - ${pmSubstituidoId}</p>
-                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
-                    </div>
-                    <div style="margin-bottom: 0.25rem; margin-top: 1.5rem;">
-                        <p class="text-base">PM SUBSTITUTO: ${pmSubstitutoNome} - ${pmSubstitutoId}</p>
-                        <p style="margin-top: 4rem;">Assinatura:________________________________________</p>
-                    </div>
-                    <div class="mb-2" style="margin-top: 1.5rem;">
-                        <p class="text-base">Data do serviço permutado: ${servicoPermutadoTexto}</p>
-                        ${pagamentoHtml}
-                    </div>
-                    <div class="mb-4" style="text-align: left; margin-left: 20px; margin-top: 1rem;">
-                        <p class="text-base">( ${tipo24Horas} ) 24 Horas - ( ${tipo48Horas} ) 48 Horas - ( ${tipo72Horas} ) 72 Horas</p>
-                    </div>
-                    <div class="text-center" style="margin-top: 2rem;">
-                        <p class="text-base" style="margin: 0;">AUTORIZO A PERMUTA ENTRE OS POLICIAIS MILITARES ACIMA RELACIONADOS: ( &nbsp; ) Sim &nbsp; ( &nbsp; ) Não</p>
-                        <p class="text-base" style="margin-top: 3rem; margin-bottom: 0;">_____________________________________________________</p>
-                        <p class="text-base" style="margin-top: 0.2rem; margin-bottom: 0;">JOSE RIBAMAR BRAGA JUNIOR - 1º TEN QOPM</p>
-                        <p class="text-sm" style="margin-top: 0;">COMANDANTE DA 2°CP/10°BPM</p>
-                    </div>
-                </div></body></html>`;
-
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(printContent);
-                printWindow.document.close();
-                printWindow.onload = () => { printWindow.focus(); printWindow.print(); };
-            } else {
-                showCustomAlert('Erro de Pop-up', 'Por favor, habilite pop-ups para imprimir.');
-            }
-        }
-        
-        function signWithGovBr() {
-            window.open('https://sso.acesso.gov.br/login?client_id=assinador.iti.br&authorization_id=198daa71163', '_blank');
-        }
-
-        // --- INICIALIZAÇÃO ---
-        document.addEventListener('DOMContentLoaded', () => {
-            populatePmSelects();
-            renderCalendar(serviceCalendarState);
-            renderCalendar(paymentCalendarState);
-            noPagamentoCheckbox.checked = false; // Inicia desmarcada por padrão
-            paymentContainer.classList.remove('hidden'); // Mostra o calendário de pagamento por padrão
-        });
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
-
