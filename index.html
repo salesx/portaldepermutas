@@ -92,7 +92,7 @@
             { idDoc: "25", nome: "Sd PM 572/22 Theodósio", idMilitar: "871896" },
             { idDoc: "26", nome: "Sd PM 246/24 Lobato", idMilitar: "N/A" },
             { idDoc: "27", nome: "Sd PM 457/24 Eduardo Silva", idMilitar: "869987" }
-        ].sort((a, b) => a.nome.localeCompare(b.nome));
+        ].sort((a, b) => a.nome.localeCompare(b.nome)).map((m, i) => ({ ...m, ordem: i })); // Adicionando ordem para o backup
 
         const ADMIN_PASSWORD = "32573515";
 
@@ -231,8 +231,15 @@
                     const unsubscribe = onSnapshot(colRef, (snapshot) => {
                         const list = snapshot.docs.map(doc => ({ ...doc.data(), idDoc: doc.id }));
                         if (list.length > 0) {
-                            setMilitares(list.sort((a, b) => (a.nome || "").localeCompare(b.nome || "")));
+                            // Ordena pela propriedade de ordem, senão pelo nome
+                            setMilitares(list.sort((a, b) => {
+                                const ordemA = typeof a.ordem === 'number' ? a.ordem : 9999;
+                                const ordemB = typeof b.ordem === 'number' ? b.ordem : 9999;
+                                if (ordemA !== ordemB) return ordemA - ordemB;
+                                return (a.nome || "").localeCompare(b.nome || "");
+                            }));
                         } else if (!snapshot.metadata.fromCache) {
+                            // Popula o banco a partir do backup atribuindo a ordem
                             LISTA_INICIAL.forEach(m => addDoc(colRef, m));
                         }
                     }, (error) => {
@@ -266,20 +273,21 @@
 
             // --- FUNÇÕES ADMIN ---
             const addMilitarLocal = (nome, id) => {
-                const newMilitar = { nome: nome, idMilitar: id };
+                const maxOrdem = militares.reduce((max, m) => typeof m.ordem === 'number' ? Math.max(max, m.ordem) : max, -1);
+                const newMilitar = { nome: nome, idMilitar: id, ordem: maxOrdem + 1 };
                 if (db && user && !isOfflineMode) {
                     const { collection, addDoc } = window.FirebaseLib;
                     addDoc(collection(db, 'militares_lista'), newMilitar);
                 } else {
                     const newLocal = { ...newMilitar, idDoc: Date.now().toString() };
-                    setMilitares([...militares, newLocal].sort((a, b) => a.nome.localeCompare(b.nome)));
+                    setMilitares([...militares, newLocal]);
                 }
             };
 
             const deleteMilitarLocal = async (idDoc) => {
                 if(!window.confirm("Tem certeza que deseja excluir este militar?")) return;
                 
-                // ATUALIZAÇÃO OTIMISTA: Remove da tela imediatamente
+                // ATUALIZAÇÃO OTIMISTA
                 setMilitares(current => current.filter(m => m.idDoc !== idDoc));
 
                 if (db && user && !isOfflineMode) {
@@ -299,13 +307,14 @@
             };
 
             const saveEdit = async () => {
-                // ATUALIZAÇÃO OTIMISTA PARA EDIÇÃO
-                const optimisticList = militares.map(m => 
-                    m.idDoc === editingId ? { ...m, nome: editName, idMilitar: editIdMilitar } : m
-                );
-                setMilitares(optimisticList);
                 const idToUpdate = editingId;
                 const dataToUpdate = { nome: editName, idMilitar: editIdMilitar };
+                
+                // ATUALIZAÇÃO OTIMISTA PARA EDIÇÃO
+                const optimisticList = militares.map(m => 
+                    m.idDoc === editingId ? { ...m, ...dataToUpdate } : m
+                );
+                setMilitares(optimisticList);
                 setEditingId(null);
 
                 if (db && user && !isOfflineMode) {
@@ -320,18 +329,54 @@
                 }
             };
 
-            const moveUp = (index) => {
+            const moveUp = async (index) => {
                 if (index === 0) return;
+                const current = militares[index];
+                const prev = militares[index - 1];
+                
+                const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
+                const prevOrdem = typeof prev.ordem === 'number' ? prev.ordem : index - 1;
+
+                // Troca a ordem visualmente e no estado local
                 const newList = [...militares];
-                [newList[index - 1], newList[index]] = [newList[index], newList[index - 1]];
+                newList[index] = { ...prev, ordem: currentOrdem };
+                newList[index - 1] = { ...current, ordem: prevOrdem };
                 setMilitares(newList);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: prevOrdem });
+                        await updateDoc(doc(db, 'militares_lista', prev.idDoc), { ordem: currentOrdem });
+                    } catch (err) {
+                        console.error("Erro ao reordenar:", err);
+                    }
+                }
             };
 
-            const moveDown = (index) => {
+            const moveDown = async (index) => {
                 if (index === militares.length - 1) return;
+                const current = militares[index];
+                const next = militares[index + 1];
+                
+                const currentOrdem = typeof current.ordem === 'number' ? current.ordem : index;
+                const nextOrdem = typeof next.ordem === 'number' ? next.ordem : index + 1;
+
+                // Troca a ordem visualmente e no estado local
                 const newList = [...militares];
-                [newList[index + 1], newList[index]] = [newList[index], newList[index + 1]];
+                newList[index] = { ...next, ordem: currentOrdem };
+                newList[index + 1] = { ...current, ordem: nextOrdem };
                 setMilitares(newList);
+
+                if (db && user && !isOfflineMode) {
+                    try {
+                        const { doc, updateDoc } = window.FirebaseLib;
+                        await updateDoc(doc(db, 'militares_lista', current.idDoc), { ordem: nextOrdem });
+                        await updateDoc(doc(db, 'militares_lista', next.idDoc), { ordem: currentOrdem });
+                    } catch (err) {
+                        console.error("Erro ao reordenar:", err);
+                    }
+                }
             };
 
             const formatarDataRange = (startDate, endDate) => {
@@ -396,7 +441,7 @@
                     </style></head><body>
                     <div class="container">
                         <div class="text-center" style="line-height: 1.15; margin: 0;">
-                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;">
+                            <img src="${brasaoUrlPrint}" alt="Brasão" style="width: 90px; height: 110px; display: block; margin: 0 auto 4px;" id="brasao-print">
                             <p class="font-bold" style="margin: 0;">ESTADO DO MARANHÃO</p>
                             <p class="text-sm" style="margin: 0;">SECRETARIA DE SEGURANÇA PÚBLICA</p>
                             <p class="text-sm" style="margin: 0;">CPA/I-5 – 10º BPM</p>
@@ -431,9 +476,13 @@
                         </div>
                         <script>
                             window.onload = function() {
-                                setTimeout(function() {
-                                    window.print();
-                                }, 800);
+                                var img = document.getElementById('brasao-print');
+                                if(img.complete) {
+                                    setTimeout(window.print, 200);
+                                } else {
+                                    img.onload = function() { setTimeout(window.print, 200); };
+                                    img.onerror = function() { setTimeout(window.print, 200); }; // Imprime mesmo se a imagem falhar
+                                }
                             }
                         <\/script>
                     </div></body></html>
@@ -554,7 +603,7 @@
                     <div className="max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden">
                         <header className="p-8 md:p-12 text-center border-b bg-gray-50 relative">
                             <button onClick={() => setShowAdminLogin(true)} className="absolute top-6 right-6 text-gray-300 hover:text-blue-600 transition-colors"><Icon name="settings" /></button>
-                            <img src="https://i.ibb.co/tP8QZ1Ys/1770146329010.png" className="h-20 mx-auto mb-6" alt="Logo" />
+                            <img src="https://i.ibb.co/rK4LvYVj/imagem-2026-04-29-112907685.png" className="h-20 mx-auto mb-6" alt="Logo" />
                             <h1 className="text-xl font-bold text-gray-800 tracking-tight">2ª COMPANHIA</h1>
                             <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase tracking-[0.2em]">DPM DE TURIAÇU</p>
                             <h2 className="text-4xl font-black text-gray-900 mb-8 tracking-tighter text-center">Permuta de Serviço</h2>
